@@ -16,7 +16,7 @@ public class Main {
 
   public static void main(String[] args) throws Exception {
     
-    SparkSession spark = SparkSession.builder().appName("JavaSparkPi").getOrCreate();
+    SparkSession spark = SparkSession.builder().appName(Main.class.getName()).getOrCreate();
     SparkContext sc = spark.sparkContext();
     JavaSparkContext jsc = new JavaSparkContext(sc);
 
@@ -24,13 +24,13 @@ public class Main {
       @Override
       public void onJobStart(SparkListenerJobStart jobStart) {
         super.onJobStart(jobStart);
-        logger.debug("!!!! onJobStart !!!!! ");
+        logger.info("!!!! onJobStart !!!!! ");
       }
   
       @Override
       public void onJobEnd(SparkListenerJobEnd jobEnd) {
         super.onJobEnd(jobEnd);
-        logger.debug("!!!! onJobEnd !!!!! ");
+        logger.info("!!!! onJobEnd !!!!! ");
       }
     
     });
