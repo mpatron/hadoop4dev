@@ -1,0 +1,63 @@
+---
+# ansible hadoop -i inventories/jobjects --become --module-name raw --args "uptime -s"
+all:
+  hosts:
+    node0.jobjects.net:
+      ansible_host: 192.168.56.140
+      ansible_ssh_user: vagrant
+      ansible_ssh_pass: vagrant
+    node1.jobjects.net:
+      ansible_host: 192.168.56.141
+      ansible_ssh_user: vagrant
+      ansible_ssh_pass: vagrant
+    node2.jobjects.net:
+      ansible_host: 192.168.56.142
+      ansible_ssh_user: vagrant
+      ansible_ssh_pass: vagrant
+    node3.jobjects.net:
+      ansible_host: 192.168.56.143
+      ansible_ssh_user: vagrant
+      ansible_ssh_pass: vagrant
+    node4.jobjects.net:
+      ansible_host: 192.168.56.144
+      ansible_ssh_user: vagrant
+      ansible_ssh_pass: vagrant
+    node5.jobjects.net:
+      ansible_host: 192.168.56.145
+      ansible_ssh_user: vagrant
+      ansible_ssh_pass: vagrant
+  vars:
+    # Ansible tools
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_connection: "ssh"
+    # ansible_user: "root"
+    # ansible_ssh_pass: "{{ vault_localadmin_password }}"
+    # ansible_become_pass: "{{ vault_localadmin_password }}"
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+  children:
+    hadoop:
+      children:
+        namenodes: # Une et unique machine obligatoire
+        resourcemanagers: # Une et unique machine obligatoire
+        datanodes: # Une ou plusieur machine obligatoire
+        hiveservers: # Une et unique machine obligatoire
+      vars:
+#        no_variable_here: "in but in files"
+    namenodes:
+      hosts:
+        node0.jobjects.net:
+    resourcemanagers:
+      hosts:
+        node1.jobjects.net:
+    hiveservers:
+      hosts:
+        node1.jobjects.net:
+    datanodes:
+      hosts:
+        node2.jobjects.net:
+        node3.jobjects.net:
+        node4.jobjects.net:
+        node5.jobjects.net:
+    edges:
+      hosts:
+        node1.jobjects.net:

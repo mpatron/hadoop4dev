@@ -1,0 +1,19 @@
+## Do not forget to change the PID directory
+[Unit]
+Description=SPARK History Server
+After=syslog.target network.target remote-fs.target nss-lookup.target network-online.target hdfs.service yarn.service
+Requires=network-online.target
+
+[Service]
+User={{ hadoop_user }}
+Group={{ hadoop_user }}
+Type=simple
+ExecStart=/bin/bash -lc {{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/sbin/start-history-server.sh
+ExecStop=/bin/bash -lc {{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/sbin/stop-history-server.sh
+WorkingDirectory={{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/sbin
+TimeoutStartSec=5min
+# Restart=on-failure
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,267 @@
+---
+# ansible-playbook -i inventories/jobjects 01-install-hadoop.yml
+- name: Playbook to configure with username/password
+  hosts: hadoop
+  become: true
+
+  vars_files:
+    - vars/main.yml
+
+  roles:
+    - role: ansible_role_almalinux
+    - role: geerlingguy.swap
+    - role: ansible_role_hadoop_adduser
+
+  tasks:
+    - name: Create directory /hadoop if does not exist
+      ansible.builtin.file:
+        path: /hadoop
+        state: directory
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
+        mode: '0755'
+    - name: Create directory /hadoop if does not exist
+      ansible.builtin.file:
+        path: /home/hadoop/.local/bin
+        state: directory
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
+        mode: '0755'
+    - name: Copy Hive configuration by static
+      ansible.builtin.copy:
+        src: "files/{{ item }}"
+        dest: "/home/hadoop/.local/bin"
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
+        mode: '0644'
+      loop:
+        - first-start.sh
+
+# Hadoop
+
+## Environnement
+    # curl -OL https://dlcdn.apache.org/hadoop/common/{{ install_hadoop_file }}/{{ install_hadoop_file }}.tar.gz
+    - name: Download file for Hadoop3
+      ansible.builtin.get_url:
+        url: https://dlcdn.apache.org/hadoop/common/{{ install_hadoop_file }}/{{ install_hadoop_file }}.tar.gz
+        checksum: sha512:09cda6943625bc8e4307deca7a4df76d676a51aca1b9a0171938b793521dfe1ab5970fdb9a490bab34c12a2230ffdaed2992bad16458169ac51b281be1ab6741
+        dest: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}.tar.gz"
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
+        mode: '0644'
+        validate_certs: false
+    # sudo tar xvfz {{ install_hadoop_file }}.tar.gz -C {{ install_hadoop_dir }}/
+    - name: Unarchive a file that is already on the remote machine
+      ansible.builtin.unarchive:
+        src: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}.tar.gz"
+        dest: "{{ install_hadoop_dir }}"
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
+        remote_src: true
+    # Fix bug hadoop executable cmd file tar in bin and sbin
+    - name: "[Fix bug hadoop tar] cmd are executable in unix mode"
+      ansible.builtin.find:
+        paths: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+        file_type: file
+        patterns: "*.cmd"
+      register: filelist
+    - name: "[Fix bug hadoop tar] change permissions"
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
+        mode: "0664"
+      with_items: "{{ filelist.files }}"
+    - name: "[Fix bug hadoop tar] cmd are executable in unix mode"
+      ansible.builtin.find:
+        paths: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin"
+        file_type: file
+        patterns: "*.cmd"
+      register: filelist
+    - name: "[Fix bug hadoop tar] change permissions"
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
+        mode: "0664"
+      with_items: "{{ filelist.files }}"
+
+    - name: Add another bin dir to system-wide $PATH.
+      ansible.builtin.copy:
+        dest: /etc/profile.d/01-java-path.sh
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          export JAVA_HOME=/usr/lib/jvm/java
+    - name: Add another bin dir to system-wide $PATH.
+      ansible.builtin.copy:
+        dest: /etc/profile.d/02-hadoop-path.sh
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          export PATH=$PATH:{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin:{{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin
+          export HADOOP_HOME={{ install_hadoop_dir }}/{{ install_hadoop_file }}
+          export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+  #  - name: Set env variables
+  #    blockinfile:
+  #      dest: /home/hadoop/.bashrc
+  #      block: |
+  #        export {{ item.name }}={{ item.line }}
+  #      marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
+  #    loop:
+  #      - { name: HADOOP_HOME, line: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}" }
+  #      - { name: PATH, line: "$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin" }
+  #      - { name: JAVA_HOME, line: "/usr/lib/jvm/java" }
+    - name: Test env
+      ansible.builtin.shell: . /home/hadoop/.bashrc && echo $HADOOP_HOME && echo $PATH && echo $JAVA_HOME
+      register: my_output
+      changed_when: my_output.rc != 0
+    - name: Display variable my_output
+      ansible.builtin.debug:
+        var: my_output
+
+## Les disques
+    - name: Copy hadoop configuration
+      ansible.builtin.copy:
+        src: "files/{{ item }}"
+        dest: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/etc/hadoop"
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
+        mode: '0644'
+      loop:
+        - mapred-site.xml
+    - name: Install configure file in /etc/hadoop/{{ item }}
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/etc/hadoop/{{ item }}"
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
+        mode: '0644'
+      loop:
+        - workers
+        - core-site.xml
+        - hadoop-env.sh
+        - hdfs-site.xml
+        - yarn-site.xml
+    - name: Creates directory disk
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
+        mode: '0755'
+        state: directory
+      with_items:
+        - "{{ install_hadoop_dir }}/disk/nn"
+        - "{{ install_hadoop_dir }}/disk/sn"
+        - "{{ install_hadoop_dir }}/disk/dn"
+        - "{{ install_hadoop_dir }}/disk/tmp"
+## ============================================================================
+## Le formatage de HDFS, il ne se fait qu'une fois.
+## Verification de la présence de {{ install_hadoop_dir }}/disk/nn/current/VERSION.
+    - name: "Copy services namenode for HDFS Service"
+      ansible.builtin.template:
+        src: "systemd_service.template"
+        dest: "/etc/systemd/system/{{ item.filename }}"
+        owner: "root"
+        group: "root"
+        mode: '0644'
+      when: "'namenodes' in group_names"
+      loop:
+        - { description: "Hadoop HDFS namenode service",
+            start: "nohup /bin/bash -lc 'nohup {{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin/start-dfs.sh >>/tmp/start-dfs.log 2>&1'",
+            stop: "nohup /bin/bash -lc '{{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin/stop-dfs.sh >>/tmp/stop-dfs.log 2>&1'",
+            filename: "hadoop-dfs.service" }
+    - name: Stop HDFS Service
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: stopped
+        daemon_reload: true
+      when: "'namenodes' in group_names"
+      with_items:
+        - hadoop-dfs.service
+    - name: Formatage du volume HDFS
+      ansible.builtin.command: "{{ item }}"
+      args:
+        creates: "{{ install_hadoop_dir }}/disk/nn/current/VERSION"
+        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+      become: true
+      become_user: "{{ hadoop_user }}"
+      when: inventory_hostname == hdfs_namenodes[0]
+      loop:
+        - bash -lc './hdfs namenode -format -nonInteractive'
+    - name: Start HDFS Service
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+        daemon_reload: true
+      when: "'namenodes' in group_names"
+      with_items:
+        - hadoop-dfs.service
+## ============================================================================
+    - name: "Copy services namenode for Yarn Service"
+      ansible.builtin.template:
+        src: "systemd_service.template"
+        dest: "/etc/systemd/system/{{ item.filename }}"
+        owner: "root"
+        group: "root"
+        mode: '0644'
+      when: "'resourcemanagers' in group_names"
+      loop:
+        - { description: "Hadoop YARN resource service",
+            start: "nohup /bin/bash -lc 'nohup {{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin/start-yarn.sh >>/tmp/start-yarn.log 2>&1'",
+            stop: "nohup /bin/bash -lc '{{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin/stop-yarn.sh >>/tmp/stop-yarn.log 2>&1'",
+            filename: "hadoop-yarn.service" }
+    - name: Start HDFS Service
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+        daemon_reload: true
+      when: "'resourcemanagers' in group_names"
+      with_items:
+        - hadoop-yarn.service
+    - name: Create command on HDFS CLuster for HDFS et YARN
+      ansible.builtin.command: "{{ item }}"
+      args:
+        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+      become: true
+      become_user: "{{ hadoop_user }}"
+      when: inventory_hostname == hdfs_namenodes[0]
+      register: my_output
+      changed_when: my_output.rc == 0
+      loop:
+        - bash -lc 'hdfs dfs -mkdir -p /user/hadoop'
+        - bash -lc 'hdfs dfs -chmod 770 /user/hadoop'
+        - bash -lc 'hdfs dfs -chown hadoop:hadoop /user/hadoop'
+        - bash -lc "hdfs dfs -mkdir -p /user/{{ hadoop_user }}"
+        - bash -lc "hdfs dfs -chmod 770 /user/{{ hadoop_user }}"
+        - bash -lc "hdfs dfs -chown {{ hadoop_user }}:{{ hadoop_user }} /user/{{ hadoop_user }}"
+        - bash -lc 'hdfs dfs -mkdir -p /tmp'
+        - bash -lc 'hdfs dfs -chmod 777 /tmp'
+        - bash -lc 'hdfs dfs -chown hadoop:hadoop /tmp'
+        - bash -lc 'hdfs dfs -mkdir -p /tmp/hadoop-yarn/staging'
+        - bash -lc 'hdfs dfs -chmod 770 /tmp/hadoop-yarn/staging'
+        - bash -lc 'hdfs dfs -chown :hadoop /tmp/hadoop-yarn/staging'
+        - bash -lc 'hdfs dfs -mkdir -p /tmp/spark-logs'
+        - bash -lc 'hdfs dfs -chmod 777 /tmp/spark-logs'
+        - bash -lc 'hdfs dfs -chown hadoop:hadoop /tmp/spark-logs'
+        - bash -lc 'hdfs dfs -mkdir -p /user/hive/warehouse'
+        - bash -lc 'hdfs dfs -chmod 775 /user/hive/warehouse'
+        - bash -lc 'hdfs dfs -chown hive:hadoop /user/hive/warehouse'
+
+## TODO Les services
+# systemctl --type=service | grep -i hadoop
+# hadoop-hdfs-namenode.service           loaded active running Hadoop namenode
+# hadoop-httpfs.service                  loaded active running Hadoop httpfs
+# hadoop-kms.service                     loaded active running Hadoop kms
+# hadoop-mapreduce-historyserver.service loaded active running Hadoop historyserver
+# hadoop-state-pusher.service            loaded active running Daemon process that processes and serves EMR metrics data.
+# hadoop-yarn-proxyserver.service        loaded active running Hadoop proxyserver
+# hadoop-yarn-resourcemanager.service    loaded active running Hadoop resourcemanager
+# hadoop-yarn-timelineserver.service     loaded active running Hadoop timelineserver

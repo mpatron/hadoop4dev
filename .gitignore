@@ -1,0 +1,26 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+!local_policy.jar
+!US_export_policy.jar
+
+# Eclipse
+.classpath
+.project
+.settings
+.metadata
+
+# Maven 
+target
+
+#Derby
+derby.log
+
+.vscode
+.vagrant
+
+*.exclude

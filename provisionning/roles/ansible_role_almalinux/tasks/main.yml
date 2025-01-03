@@ -1,0 +1,106 @@
+---
+# Upgrade all packages
+- name: Upgrade all packages
+  ansible.builtin.dnf:
+    name: '*'
+    state: latest
+    update_only: true
+- name: Install a list of packages no present
+  ansible.builtin.dnf:
+    name: "{{ packages }}"
+    state: absent
+  vars:
+    packages:
+      - java-1.8.0-openjdk-headless
+      - java-1.8.0-openjdk-devel
+      - java-1.8.0-openjdk
+      - java-17-openjdk
+      - java-17-openjdk-headless
+- name: Install a list of packages with a list variable
+  ansible.builtin.dnf:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - java-11-openjdk-headless
+      - java-11-openjdk-devel
+      - ca-certificates
+      - unzip
+      - curl
+# Journald for OS type RedHat
+- name: Journald SystemMaxUse
+  community.general.ini_file:
+    path: /etc/systemd/journald.conf
+    section: Journal
+    option: Storage
+    value: persistent
+    mode: '0644'
+    state: present
+    backup: true
+  notify: "Restart systemd-journald service"
+- name: Journald SystemMaxUse
+  community.general.ini_file:
+    path: /etc/systemd/journald.conf
+    section: Journal
+    option: SystemMaxUse
+    value: 4G
+    mode: '0644'
+    state: present
+    backup: true
+  notify: "Restart systemd-journald service"
+- name: Journald SystemMaxFileSize
+  community.general.ini_file:
+    path: /etc/systemd/journald.conf
+    section: Journal
+    option: SystemMaxFileSize
+    value: 500M
+    mode: '0644'
+    state: present
+    backup: true
+  notify: "Restart systemd-journald service"
+## Firewall down
+- name: Recupération du service facts
+  ansible.builtin.service_facts:
+- name: Stop service firewalld, if started
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+    enabled: false
+  when: ansible_facts.services["firewalld.service"] is defined
+- name: Sudoers nopassword for mpatron
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/sudoers.d/mpatron"
+    dest: /etc/sudoers.d/mpatron
+    owner: root
+    group: root
+    mode: '0644'
+- name: Copy proxy.sh
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/proxy.sh"
+    dest: /etc/profile.d/proxy.sh
+    owner: root
+    group: root
+    mode: '0755'
+## Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files
+- name: Recuperation du home de java
+  ansible.builtin.shell:
+    cmd: echo $(dirname $(readlink -f $(which java)))
+  register: my_output
+  changed_when: my_output.rc != 0
+- name: Setting host facts using home java
+  ansible.builtin.set_fact:
+    java_bin_path: "{{ my_output.stdout }}"
+- name: Copy local_policy.jar
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/UnlimitedJCEPolicyJDK8/local_policy.jar"
+    dest: "{{ java_bin_path }}/../lib/security"
+    owner: root
+    group: root
+    mode: '0644'
+- name: Copy US_export_policy.jar
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/UnlimitedJCEPolicyJDK8/US_export_policy.jar"
+    dest: "{{ java_bin_path }}/../lib/security"
+    owner: root
+    group: root
+    mode: '0644'

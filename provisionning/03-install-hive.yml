@@ -1,0 +1,239 @@
+---
+# ansible-playbook -i inventories/jobjects 03-install-hive.yml
+- name: Playbook to configure with username/password
+  hosts: hiveservers
+  become: true
+
+  vars_files:
+    - vars/main.yml
+
+  roles:
+    - role: ansible_role_almalinux
+    - role: geerlingguy.swap
+    - role: ansible_role_hadoop_adduser
+
+  handlers:
+#    - name: Print Restart Postgresql
+#      ansible.builtin.debug:
+#        msg: "Print Restart Postgresql"
+#      listen: EventPostgresqlRestart
+    - name: Restart Postgresql
+      ansible.builtin.systemd_service:
+        name: postgresql
+        enabled: true
+        daemon_reload: true
+        state: restarted
+      listen: EventPostgresqlRestart
+    - name: Start Postgresql
+      ansible.builtin.systemd_service:
+        name: postgresql
+        enabled: true
+        daemon_reload: true
+        state: started
+    - name: Stop Postgresql
+      ansible.builtin.systemd_service:
+        name: postgresql
+        enabled: true
+        daemon_reload: true
+        state: stopped
+    - name: Enable Postgresql
+      ansible.builtin.systemd_service:
+        name: postgresql
+        enabled: true
+        daemon_reload: true
+      listen: EventPostgresqlEnable
+
+  tasks:
+
+    ## PostgreSQL
+    # https://rischmann.fr/blog/setting-up-postgresql-with-ansible
+    - name: Install a list of packages with a list variable
+      ansible.builtin.dnf:
+        name: "{{ packages }}"
+        state: present
+        update_cache: true
+      vars:
+        packages:
+          - postgresql-server
+          - postgresql-contrib
+          - python3-psycopg2
+      notify: EventPostgresqlEnable
+    - name: Check if PostgreSQL database is initialized.
+      ansible.builtin.stat:
+        path: "{{ postgresql_data_dir }}/PG_VERSION"
+      register: pgdata_dir_version
+    - name: Ensure PostgreSQL database is initialized.
+      ansible.builtin.command:
+        cmd: "/usr/bin/initdb -D {{ postgresql_data_dir }}"
+        creates: "{{ postgresql_data_dir }}/PG_VERSION"
+      when: not pgdata_dir_version.stat.exists
+      become: true
+      become_user: "{{ postgresql_user }}"
+    - name: Start and enable the service
+      ansible.builtin.systemd_service:
+        name: postgresql
+        state: started
+        enabled: true
+    - name: "Ensure PostgreSQL is listening on *"
+      ansible.builtin.lineinfile:
+        dest: /var/lib/pgsql/data/postgresql.conf
+        regexp: '^listen_addresses\s*='
+        line: "listen_addresses='*'"
+        state: present
+    - name: Restart Postgresql for listener
+      ansible.builtin.systemd_service:
+        name: postgresql
+        state: restarted
+    - name: Add new configuration to "pg_hba.conf"
+      ansible.builtin.blockinfile:
+        dest: /var/lib/pgsql/data/pg_hba.conf
+        block: |
+          host    all             all             0.0.0.0/0                scram-sha-256
+          host    all             all             ::/0                     scram-sha-256
+    - name: Restart Postgresql for pg_hba.conf
+      ansible.builtin.systemd_service:
+        name: postgresql
+        state: restarted
+    - name: Create the databases
+      community.postgresql.postgresql_db:
+        name: "{{ item }}"
+        encoding: "UTF-8"
+        conn_limit: "300"
+      become: true
+      become_user: "{{ postgresql_user }}"
+      with_items: "{{ postgresql_databases }}"
+    - name: Create the users
+      community.postgresql.postgresql_user:
+        db: "{{ item.db }}"
+        name: "{{ item.name }}"
+        password: "{{ item.password | default(omit) }}"
+      become: true
+      become_user: "{{ postgresql_user }}"
+      environment:
+        PGOPTIONS: "-c password_encryption=scram-sha-256"
+      with_items: "{{ postgresql_users }}"
+    - name: Set the user privileges
+      community.postgresql.postgresql_privs:
+        database: "{{ item.db }}"
+        state: present
+        objs: "{{ item.objs | default(omit) }}"
+        privs: "{{ item.privs }}"
+        type: "{{ item.type | default(omit) }}"
+        roles: "{{ item.roles | default(omit) }}"
+      become: true
+      become_user: "{{ postgresql_user }}"
+      with_items: "{{ postgresql_privs | default([]) }}"
+    - name: Create a Superuser PostgreSQL database user
+      community.postgresql.postgresql_user:
+        name: 'hive'
+        role_attr_flags: CREATEDB,SUPERUSER,CREATEROLE
+        state: present
+      become: true
+      become_user: "{{ postgresql_user }}"
+    ## Hive
+    # https://mitu.co.in/wp-content/uploads/2022/07/26.-Installation-of-Hive-on-Ubuntu.pdf
+    # https://cwiki.apache.org/confluence/display/Hive/Configuration+Properties
+    # http://mtitek.com/tutorials/bigdata/hive/install.php
+    # curl -OL https://dlcdn.apache.org/hadoop/common/{{ install_hadoop_file }}/{{ install_hadoop_file }}.tar.gz
+    - name: Download file Hive 4 for Hadoop3
+      ansible.builtin.get_url:
+        url: https://dlcdn.apache.org/hive/{{ install_hive_file }}/apache-{{ install_hive_file }}-bin.tar.gz
+        dest: "{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin.tar.gz"
+        checksum: sha256:2bf988a1ed17437b1103e367939c25a13f64d36cf6d1c3bef8c3f319f0067619
+        mode: '0644'
+        validate_certs: false
+    # sudo tar xvfz {{ install_hadoop_file }}.tar.gz -C {{ install_hadoop_dir }}/
+    - name: Unarchive a file that is already on the remote machine
+      ansible.builtin.unarchive:
+        src: "{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin.tar.gz"
+        dest: "{{ install_hadoop_dir }}"
+        owner: "{{ hive_user }}"
+        group: "{{ hive_user }}"
+        remote_src: true
+    - name: Work arround owner file hive tar (not good owner file in tar)
+      ansible.builtin.file:
+        dest: "{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin"
+        owner: "{{ hive_user }}"
+        group: "{{ hive_user }}"
+        recurse: true
+    - name: Add another bin dir to system-wide $PATH.
+      ansible.builtin.copy:
+        dest: /etc/profile.d/04-hive-path.sh
+        mode: '0644'
+        content: |
+          export PATH=$PATH:{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/bin
+          export HIVE_HOME={{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin
+    - name: Create command on Master HDFS CLuster
+      ansible.builtin.command: "{{ item }}"
+      args:
+        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+      become: true
+      become_user: "{{ hadoop_user }}"
+      register: my_output
+      changed_when: my_output.rc == 0
+      loop:
+        - bash -lc './hdfs dfs -mkdir -p /tmp'
+        - bash -lc './hdfs dfs -chmod g+w /tmp'
+        - bash -lc './hdfs dfs -mkdir -p /user/hive/warehouse'
+        - bash -lc './hdfs dfs -chmod g+w /user/hive/warehouse'
+        - bash -lc './hdfs dfs -chown hive:hadoop /user/hive'
+    - name: "Download postgresql.jar and put it on hive-server /hadoop/apache-hive-4.0.1-bin/lib"
+      ansible.builtin.command: "{{ item }}"
+      args:
+        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+      become: true
+      become_user: "{{ hive_user }}"
+      register: my_output
+      changed_when: my_output.rc == 0
+      loop:
+        - bash -lc 'curl -L -O --output-dir {{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/lib
+          https://jdbc.postgresql.org/download/postgresql-42.7.4.jar'
+    - name: Copy Hive configuration
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: "{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/conf"
+        owner: "{{ hive_user }}"
+        group: "{{ hive_user }}"
+        mode: '0644'
+      loop:
+        - hive-site.xml
+    - name: Copy Hive configuration by template
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: "{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/conf"
+        owner: "{{ hive_user }}"
+        group: "{{ hive_user }}"
+        mode: '0644'
+      loop:
+        - spark-defaults.conf
+    - name: Create schematool to HDFS CLuster from {{ hive_servers[0] }}
+      ansible.builtin.command: "{{ item }}"
+      args:
+        chdir: "{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/bin"
+        creates: "~/.schemaHiveCreated"
+      become: true
+      become_user: "{{ hive_user }}"
+      loop:
+        - bash -lc './schematool -initSchema -dbType postgres && touch ~/.schemaHiveCreated'
+    - name: Copy services Hive Service
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: "/etc/systemd/system"
+        owner: "root"
+        group: "root"
+        mode: '0644'
+      loop:
+        - hive-hiveserver2.service
+        - hive-metastore.service
+    - name: Start Hive Service (hive-hiveserver2 and hive-metastore)
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        daemon_reload: true
+        state: started
+      with_items:
+        - hive-hiveserver2
+        - hive-metastore
+    - name: Display variable my_output
+      ansible.builtin.debug:
+        var: hive_servers[0]

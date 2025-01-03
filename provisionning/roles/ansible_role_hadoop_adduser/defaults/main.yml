@@ -1,0 +1,7 @@
+---
+# defaults file for ansible_role_hadoop_adduser
+ansible_role_hadoop_adduser_users:
+  - hdfs
+  - yarn
+  - hadoop
+  - hive

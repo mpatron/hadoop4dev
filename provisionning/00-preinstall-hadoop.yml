@@ -1,0 +1,78 @@
+---
+# Run :   ansible-playbook -i inventories/formationbigdatacluster hadoop-preinstall.yml
+# Check : ansible all -i inventories/formationbigdatacluster --become --module-name raw --args "lsblk"
+- name: Preinstall Workers
+  hosts: datanodes
+  become: true
+  vars:
+    swap_file_state: absent
+  roles:
+    - role: ansible_role_hadoop_adduser
+  tasks:
+    - name: Create a logical volume of 512m
+      community.general.lvol:
+        vg: lvm
+        lv: hadoop
+        size: 80G
+    - name: Create directory /hadoop if does not exist
+      ansible.builtin.file:
+        path: /hadoop
+        state: directory
+        owner: hadoop
+        group: hadoop
+        mode: '0755'
+    - name: Format the ext4 filesystem
+      community.general.filesystem:
+        fstype: "ext4"
+        dev: /dev/mapper/lvm-hadoop
+    - name: Mount the lv on /hadoop
+      ansible.posix.mount:
+        path: /hadoop
+        src: /dev/mapper/lvm-hadoop
+        fstype: "ext4"
+        state: mounted
+    - name: Add the below lines in fstab
+      ansible.builtin.blockinfile:
+        path: /etc/fstab
+        state: present
+        block: |
+          /dev/mapper/lvm-hadoop     /hadoop                    ext4    defaults        1 2
+
+- name: Preinstall Masters
+  hosts:
+    - namenodes
+    - edges
+  become: true
+  vars:
+    swap_file_state: absent
+  roles:
+    - role: ansible_role_hadoop_adduser
+  tasks:
+    - name: Create a logical volume of 512m
+      community.general.lvol:
+        vg: lvm
+        lv: hadoop
+        size: 10G
+    - name: Create directory /hadoop if does not exist
+      ansible.builtin.file:
+        path: /hadoop
+        state: directory
+        owner: hadoop
+        group: hadoop
+        mode: '0755'
+    - name: Format the ext4 filesystem
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/mapper/lvm-hadoop
+    - name: Mount the lv on /hadoop
+      ansible.posix.mount:
+        path: /hadoop
+        src: /dev/mapper/lvm-hadoop
+        fstype: ext4
+        state: mounted
+    - name: Add the below lines in fstab
+      ansible.builtin.blockinfile:
+        path: /etc/fstab
+        state: present
+        block: |
+          /dev/mapper/lvm-hadoop     /hadoop                    ext4    defaults        1 2

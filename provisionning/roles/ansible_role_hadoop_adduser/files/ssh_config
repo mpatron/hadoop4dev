@@ -1,0 +1,6 @@
+#~/.ssh/config
+Host *
+  ServerAliveInterval 300
+  ServerAliveCountMax 2400
+  TCPKeepAlive yes
+  StrictHostKeyChecking accept-new

@@ -1,0 +1,43 @@
+---
+- name: Playbook to configure with username/password
+  hosts: hadoop
+  become: true
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Printing Fact Variables
+      ansible.builtin.debug:
+        msg: "The value of OS Family is {{ item.prop }} [ {{ item.value }} ]"
+      with_items:
+        - { prop: 'ansible_os_family', value: "{{ ansible_os_family }}" }
+        - { prop: 'ansible_distribution', value: "{{ ansible_distribution }}" }
+        - { prop: 'ansible_distribution_major_version', value: "{{ ansible_distribution_major_version }}" }
+      when: inventory_hostname == hdfs_namenodes[0]
+    - name: Install Yarn and HDFS Service
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+        daemon_reload: true
+      become: true
+      when: inventory_hostname == hdfs_namenodes[0]
+      with_items:
+        - hdfs
+        - yarn
+        - spark-history
+    - name: Create command on HDFS CLuster
+      ansible.builtin.command: "{{ item }}"
+      args:
+        creates: "{{ install_hadoop_dir }}/disk/nn/current/VERSION"
+        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+      become: true
+      become_user: "{{ hadoop_user }}"
+      when: inventory_hostname == hdfs_namenodes[0]
+      register: my_output
+      changed_when: my_output.rc == 0
+      loop:
+        - bash -lc './hdfs namenode -format'
+    - name: Display variable my_output
+      ansible.builtin.debug:
+        var: my_output

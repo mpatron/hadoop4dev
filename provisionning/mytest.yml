@@ -1,0 +1,65 @@
+---
+- name: Playbook to configure with username/password
+  hosts: hadoop
+  become: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: Printing Fact Variables
+      ansible.builtin.debug:
+        msg: "The value of OS Family is {{ item.prop }} [ {{ item.value }} ]"
+      with_items:
+        - { prop: 'ansible_os_family', value: "{{ ansible_os_family }}" }
+        - { prop: 'ansible_distribution', value: "{{ ansible_distribution }}" }
+        - { prop: 'ansible_distribution_major_version', value: "{{ ansible_distribution_major_version }}" }
+      when: inventory_hostname == hdfs_namenodes[0]
+#    - name: Copy services Yarn and HDFS Service
+#      ansible.builtin.template:
+#        src: "systemd_service.template"
+#        dest: "/etc/systemd/system/{{ item.value.filename }}"
+#        owner: "root"
+#        group: "root"
+#        mode: '0644'
+#      become: true
+#      when: inventory_hostname == hdfs_namenodes[0]
+#      loop: "{{ lookup('dict', namenodes-services) }}"
+    - name: "Copy services datanode for Yarn and HDFS Service"
+      ansible.builtin.template:
+        src: "systemd_service.template"
+        dest: "/etc/systemd/system/{{ item.filename }}"
+        owner: "root"
+        group: "root"
+        mode: '0644'
+      become: true
+      when: "'datanodes' in group_names"
+      loop:
+        - {description: "Hadoop HDFS datanode service", start: "bin/hdfs --daemon start datanode",
+           stop: "bin/hdfs --daemon stop datanode", filename: "hadoop-datanode.service"}
+        - {description: "Hadoop YARN nodemanager service", start: "bin/hdfs --daemon start nodemanager",
+           stop: "bin/hdfs --daemon stop nodemanager", filename: "hadoop-nodemanager.service"}
+    - name: "Copy services secondarynamenode and resourcemanager for Yarn and HDFS Service"
+      ansible.builtin.template:
+        src: "systemd_service.template"
+        dest: "/etc/systemd/system/{{ item.filename }}"
+        owner: "root"
+        group: "root"
+        mode: '0644'
+      become: true
+      when: "'resourcemanagers' in group_names"
+      loop:
+        - {description: "Hadoop YARN resourcemanager service", start: "bin/hdfs --daemon start resourcemanager",
+           stop: "bin/hdfs --daemon stop resourcemanager", filename: "hadoop-resourcemanager.service"}
+        - {description: "Hadoop HDFS secondary namenode service", start: "bin/hdfs --daemon start secondarynamenode",
+           stop: "bin/hdfs --daemon stop secondarynamenode", filename: "hadoop-secondarynamenode.service"}
+    - name: "Copy services namenode for Yarn and HDFS Service"
+      ansible.builtin.template:
+        src: "systemd_service.template"
+        dest: "/etc/systemd/system/{{ item.filename }}"
+        owner: "root"
+        group: "root"
+        mode: '0644'
+      become: true
+      when: "'namenodes' in group_names"
+      loop:
+        - {description: "Hadoop HDFS namenode service", start: "bin/hdfs --daemon start namenode",
+           stop: "bin/hdfs --daemon stop namenode", filename: "hadoop-namenode.service"}

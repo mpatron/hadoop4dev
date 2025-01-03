@@ -1,0 +1,76 @@
+---
+# defaults file for all playbook
+swap_file_state: absent
+
+hadoop_user: hadoop
+install_hadoop_dir: /hadoop
+
+# https://dlcdn.apache.org/hadoop/common/hadoop-3.4.1/hadoop-3.4.1.tar.gz
+install_hadoop_file: hadoop-3.4.1
+# https://dlcdn.apache.org/spark/spark-3.5.3/spark-3.5.3-bin-hadoop3.tgz
+install_spark_file: spark-3.5.3
+# https://dlcdn.apache.org/hive/hive-4.0.1/apache-hive-4.0.1-bin.tar.gz
+install_hive_file: hive-4.0.1
+
+
+hdfs_namenodes: "{{ groups.namenodes }}"
+yarn_resourcemanagers: "{{ groups.resourcemanagers }}"
+hive_servers: "{{ groups.hiveservers }}"
+
+hive_user: hive
+postgresql_user: postgres
+postgresql_data_dir: "/var/lib/pgsql/data"
+postgresql_databases: [hive, data]
+postgresql_users:
+  - { db: hive, name: hive, password: "hive" }
+  - { db: data, name: mpatron, password: "mpatron" }
+  - { db: data, name: formation1, password: "formation1" }
+  - { db: data, name: formation2, password: "formation2" }
+  - { db: data, name: formation3, password: "formation3" }
+  - { db: data, name: formation4, password: "formation4" }
+  - { db: data, name: formation5, password: "formation5" }
+  - { db: data, name: formation6, password: "formation6" }
+  - { db: data, name: formation7, password: "formation7" }
+  - { db: data, name: formation8, password: "formation8" }
+  - { db: data, name: formation9, password: "formation9" }
+postgresql_schemas:
+  - { db: hive, name: hive, owner: hive }
+  - { db: data, name: mpatron, owner: mpatron }
+postgresql_privs:
+  - { db: data, roles: mpatron, privs: ALL, type: database }
+  - { db: data, roles: formation1, privs: ALL, type: database }
+  - { db: data, roles: formation2, privs: ALL, type: database }
+  - { db: data, roles: formation3, privs: ALL, type: database }
+  - { db: data, roles: formation4, privs: ALL, type: database }
+  - { db: data, roles: formation5, privs: ALL, type: database }
+  - { db: data, roles: formation6, privs: ALL, type: database }
+  - { db: data, roles: formation7, privs: ALL, type: database }
+  - { db: data, roles: formation8, privs: ALL, type: database }
+  - { db: data, roles: formation9, privs: ALL, type: database }
+
+user_name_to_delete:
+  - hdfs
+  - yarn
+  - hadoop
+file_or_directory_to_delete:
+  - "{{ install_hadoop_dir }}/{{ install_hadoop_file }}"
+  - "{{ install_hadoop_dir }}/disk/nn"
+  - "{{ install_hadoop_dir }}/disk/sn"
+  - "{{ install_hadoop_dir }}/disk/dn"
+  - "{{ install_hadoop_dir }}/disk/tmp"
+  - "{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3"
+  - "{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin"
+  - /etc/profile.d/01-java-path.sh
+  - /etc/profile.d/02-hadoop-path.sh
+  - /etc/profile.d/03-spark-path.sh
+  - /etc/systemd/system/hive-hiveserver2.service
+  - /etc/systemd/system/hive-metastore.service
+  - /etc/systemd/system/spark-history.service
+  - /etc/systemd/system/hdfs.service
+  - /etc/systemd/system/yarn.service
+  - /etc/systemd/system/hadoop-datanode.service
+  - /etc/systemd/system/hadoop-nodemanager.service
+  - /etc/systemd/system/hadoop-namenode.service
+  - /etc/systemd/system/hadoop-secondarynamenode.service
+  - /etc/systemd/system/hadoop-resourcemanager.service
+  - /var/lib/pgsql

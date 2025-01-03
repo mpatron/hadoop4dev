@@ -1,0 +1,106 @@
+---
+# tasks file for ansible_role_hadoop_adduser
+# sudo bash -c "printf '%s\n%s\n' 'hadoop' 'hadoop' | passwd hadoop"
+# printf '%s\n' "hadoop" | mkpasswd -s --method=sha-512
+# ansible hadoop -i inventories/jobjects --become --module-name raw --args "printf '%s\n%s\n' 'hadoop' 'hadoop' | passwd hadoop"
+- name: Install a list of packages with a list variable for create  hash passwd
+  ansible.builtin.dnf:
+    name: "{{ packages }}"
+    state: present
+    update_cache: true
+  vars:
+    packages:
+      - python3-pip
+- name: Adding users
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: "/bin/bash"
+    # password: "{{ item | password_hash('sha512') }}" # NE FONCTIONNE PAS CAR PAS DE passlib
+    # echo $(mkpasswd --method=sha-512 'hadoop')
+    password: "$6$rQreAKgOxwM8ui4v$OfOdVwyevTfrQUUJdKZuTAlPPvmTh/HOS9OfggX8iQwtoJXMNPLVJoLUKXnBctSqoAK3bENNX5szkqZ8v3Tx51"
+    groups: "wheel"
+    append: true
+  with_items: "{{ ansible_role_hadoop_adduser_users }}"
+- name: Adding users
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: "wheel,hadoop"
+  when: inventory_hostname != 'hadoop'
+  with_items: "{{ ansible_role_hadoop_adduser_users }}"
+- name: Ensure custom facts directory exists
+  ansible.builtin.file:
+    path: "/home/{{ item }}/.ssh"
+    recurse: false
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: '0700'
+  with_items: "{{ ansible_role_hadoop_adduser_users }}"
+# Generate key for hdfs and yarn user before. And one time :
+# ssh-keygen -t ed25519 -C "hdfs@hadoop.jobjects.net" -f hdfs_hadoop
+# ssh-keygen -t ed25519 -C "yarn@hadoop.jobjects.net" -f yarn_hadoop
+- name: Creating ssh client config
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/ssh_config"
+    dest: "/home/{{ item }}/.ssh/config"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: '0600'
+  with_items: "{{ ansible_role_hadoop_adduser_users }}"
+- name: Creating a public key with content user_hadoop.pub
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/{{ item }}_hadoop.pub"
+    dest: "/home/{{ item }}/.ssh/id_ed25519.pub"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: '0644'
+  with_items: "{{ ansible_role_hadoop_adduser_users }}"
+- name: Creating a private key with content user_hadoop
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/{{ item }}_hadoop"
+    dest: "/home/{{ item }}/.ssh/id_ed25519"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: '0600'
+  with_items: "{{ ansible_role_hadoop_adduser_users }}"
+- name: Set authorized key taken from file
+  ansible.posix.authorized_key:
+    user: "{{ item }}"
+    state: present
+    key: "{{ lookup('file', '{{ role_path }}/files/{{ item }}_hadoop.pub') }}"
+  with_items: "{{ ansible_role_hadoop_adduser_users }}"
+- name: Creating a /etc/sudoers.d file with content for user_hadoop
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/etc/sudoers.d/{{ item }}"
+    dest: "/etc/sudoers.d/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: '0644'
+  with_items: "{{ ansible_role_hadoop_adduser_users }}"
+# tasks file for ansible_role_hadoop_adduser
+# sudo bash -c "printf '%s\n%s\n' 'hadoop' 'hadoop' | passwd hadoop"
+# printf '%s\n' "hadoop" | mkpasswd -s --method=sha-512
+# ansible hadoop -i inventories/formationbigdatacluster --become --module-name raw --args "printf '%s\n%s\n' 'hadoop' 'hadoop' | passwd hadoop"
+- name: Adding users
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: "/bin/bash"
+    # password: "{{ item | password_hash('sha512') }}" # NE FONCTIONNE PAS CAR PAS DE passlib
+    # echo $(mkpasswd --method=sha-512 'demo')
+    password: "$6$DkvtO7X1xjcHZ0LH$.1n5ahdjK1gZ8z7H6K0q6l9LU3Qte7CLpk9CVOTfpgdHq0M/o5aSyMlyXi49GPfzhQV2sEC0x2ald97o06UvW1"
+    groups: "hadoop,hdfs,yarn"
+    append: true
+  loop:
+    - formation1
+    - formation2
+    - formation3
+    - formation4
+    - formation5
+    - formation6
+    - formation7
+    - formation8
+    - formation9
+    # ssh node1.jobjects.net
+    # sudo su - hadoop
+    # for i in {1..12}; do hdfs dfs -mkdir /user/formation$i; done;
+    # for i in {1..12}; do hdfs dfs -chown formation$i:formation$i /user/formation$i; done;

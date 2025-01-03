@@ -1,0 +1,21 @@
+---
+roles:
+  - name: geerlingguy.swap
+    version: "1.2.0"
+collections:
+  - name: freeipa.ansible_freeipa
+    source: https://galaxy.ansible.com
+    # src: https://github.com/freeipa/ansible-freeipa.git
+    version: ">=1.11.0"
+  - name: community.general
+    source: https://galaxy.ansible.com
+    version: ">=7.5.0"
+  - name: community.crypto
+    source: https://galaxy.ansible.com
+    version: ">=2.16.0"
+  - name: ansible.posix
+    source: https://galaxy.ansible.com
+    version: ">=1.5.4"
+  - name: community.postgresql
+    source: https://galaxy.ansible.com
+    version: ">=3.4.1"

@@ -1,0 +1,6 @@
+---
+# handlers file for ansible_role_almalinux
+- name: "Restart systemd-journald service"
+  ansible.builtin.service:
+    name: systemd-journald
+    state: restarted

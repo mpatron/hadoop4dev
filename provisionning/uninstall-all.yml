@@ -1,0 +1,118 @@
+---
+- name: Delete Hadoop environnement
+  hosts: hadoop
+  become: true
+
+  vars_files:
+    - vars/main.yml
+
+  handlers:
+    - name: "Stopped hadoop-datanode.service"
+      ansible.builtin.service:
+        name: hadoop-datanode.service
+        state: stopped
+    - name: "Stopped hadoop-nodemanager.service"
+      ansible.builtin.service:
+        name: hadoop-nodemanager.service
+        state: stopped
+    - name: "Stopped hadoop-namenode.service"
+      ansible.builtin.service:
+        name: hadoop-namenode.service
+        state: stopped
+    - name: "Stopped hadoop-secondarynamenode.service"
+      ansible.builtin.service:
+        name: hadoop-secondarynamenode.service
+        state: stopped
+    - name: "Stopped hadoop-resourcemanager.service"
+      ansible.builtin.service:
+        name: hadoop-resourcemanager.service
+        state: stopped
+  tasks:
+    - name: Eteindre les services en premier car ils peuvent être en reload automatique
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        masked: true
+      register: my_output
+      # failed_when: 'my_output.rc | default("") == 0 or (my_output.rc != 0 and not (my_output.rc == 4 or my_output.rc == 5))'
+      # notify: "Stopped {{ item }}"
+      with_items:
+        - hadoop-datanode.service
+        - hadoop-nodemanager.service
+        - hadoop-namenode.service
+        - hadoop-secondarynamenode.service
+        - hadoop-resourcemanager.service
+#    - name: Display variable my_output Temporary
+#      ansible.builtin.debug:
+#        var: my_output
+    - name: Get running processes
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          sudo bash -lc "ps -ef | grep -v grep | grep -w {{ hadoop_user }} | awk '{print $2}'"
+        executable: /bin/bash
+      register: running_processes
+      failed_when: 'running_processes.rc != 0'
+      changed_when: 'running_processes.rc != 0'
+    - name: Kill running processes
+      ansible.builtin.command: "kill -9 {{ item }}"
+      register: my_output
+      changed_when: 'my_output.rc != 0'
+      with_items: "{{ running_processes.stdout_lines }}"
+    - name: Attente des suppressions des processus
+      ansible.builtin.wait_for:
+        path: "/proc/{{ item }}/status"
+        state: absent
+      with_items: "{{ running_processes.stdout_lines }}"
+      ignore_errors: true
+      register: killed_processes
+    - name: Force kill stuck processes
+      ansible.builtin.command: "kill -9 {{ item }}"
+      with_items: "{{ killed_processes.results | select('failed') | map(attribute='item') | list }}"
+      register: my_output
+      changed_when: 'my_output.rc != 0'
+
+#    - name: Killall hadoop processus
+#      ansible.builtin.command: "bash -lc 'killall -q -u {{ hadoop_user }}' || echo -n"
+#      become: true
+#      become_user: root
+#      # failed_when: false
+#      # changed_when: false
+    - name: Temporary cleaning
+      ansible.builtin.shell: "bash -lc '[ $(getent passwd {{ hadoop_user }}) ] && \
+      find /tmp -path /proc -prune -o -user {{ hadoop_user }} -exec rm -rf \"{}\" \\; || echo Nothing'"
+      register: my_output
+      changed_when: my_output.rc != 0
+#    - name: Display variable my_output Temporary
+#      ansible.builtin.debug:
+#        var: my_output
+
+# ========= Suppression de postgresql ========================================
+# sudo systemctl stop postgresql.service && sudo yum remove -y postgresql-server postgresql-contrib python3-psycopg2 && sudo rm -rf /var/lib/pgsql
+    - name: Uninstall a list of packages with a list variable
+      ansible.builtin.dnf:
+        name: "{{ packages }}"
+        state: absent
+        update_cache: true
+      vars:
+        packages:
+          - postgresql-server
+          - postgresql-contrib
+          - python3-psycopg2
+
+# ========= A la fin car suppression des fichiers de coniguration =============
+    - name: Remove Users
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: absent
+        remove: true
+      loop: "{{ user_name_to_delete }}"
+    - name: Remove file or directory
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ file_or_directory_to_delete }}"
+    - name: Services cleaning
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+      become: true
+# =============================================================================
