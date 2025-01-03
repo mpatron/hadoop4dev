@@ -6,6 +6,16 @@ Sources
 - [https://medium.com/@tayalavishi/how-to-install-hive-on-ubuntu-60222680477](https://medium.com/@tayalavishi/how-to-install-hive-on-ubuntu-60222680477)
 - [https://medium.com/@madtopcoder/putting-hadoop-hive-and-spark-together-for-the-first-time-bf44262575bd](https://medium.com/@madtopcoder/putting-hadoop-hive-and-spark-together-for-the-first-time-bf44262575bd)
 
+## Java
+
+~~~bash
+mvn clean package
+vagrant plugin install vagrant-scp
+vagrant scp ../exemple-spark/target/java-spark-examples-1.0-SNAPSHOT-uber.jar node1:/tmp/java-spark-examples-1.0-SNAPSHOT-uber.jar
+spark-submit --deploy-mode cluster --class org.jobjects.Main /tmp/java-spark-examples-1.0-SNAPSHOT-uber.jar
+# show the job in http://node1.jobjects.net:8088/cluster/apps/FINISHED
+~~~
+
 ## pyspark
 
 ~~~bash
