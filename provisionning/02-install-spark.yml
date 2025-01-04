@@ -84,17 +84,19 @@
       loop:
         - bash -lc 'curl -L -O --output-dir {{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/jars
           https://jdbc.postgresql.org/download/postgresql-42.7.4.jar'
-    - name: Copy services SPARK History Service
+    - name: "Copy services SPARK History Service"
       ansible.builtin.template:
-        src: "{{ item }}"
-        dest: "/etc/systemd/system"
+        src: "systemd_service.template"
+        dest: "/etc/systemd/system/{{ item.filename }}"
         owner: "root"
         group: "root"
         mode: '0644'
-      become: true
       when: inventory_hostname == hdfs_namenodes[0]
       loop:
-        - spark-history.service
+        - { description: "SPARK History Service",
+            start: "nohup /bin/bash -lc 'nohup {{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/sbin/start-history-server.sh >>/tmp/start-history-server.log 2>&1'",
+            stop: "nohup /bin/bash -lc '{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/sbin/stop-history-server.sh >>/tmp/stop-history-server.log 2>&1'",
+            filename: "spark-history.service" }
     - name: Install SPARK History Service
       ansible.builtin.systemd_service:
         name: "{{ item }}"
@@ -105,3 +107,4 @@
       when: inventory_hostname == hdfs_namenodes[0]
       with_items:
         - spark-history
+
