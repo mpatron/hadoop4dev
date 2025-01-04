@@ -127,7 +127,7 @@ $SPARK_HOME/sbin/start-history-server.sh
 spark-submit --deploy-mode client --class org.apache.spark.examples.SparkPi $SPARK_HOME/examples/jars/spark-examples_2.12-3.5.1.jar 10
 
 HDFS:          http://node0.jobjects.net:9870
-YARN:          http://node0.jobjects.net:8088
+YARN:          http://node1.jobjects.net:8088
 SPARK_HISTORY: http://node0.jobjects.net:18080
 HIVE_SERVER:   http://node1.jobjects.net:10002
 
