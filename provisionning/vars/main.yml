@@ -24,15 +24,15 @@ postgresql_databases: [hive, data]
 postgresql_users:
   - { db: hive, name: hive, password: "hive" }
   - { db: data, name: mpatron, password: "mpatron" }
-  - { db: data, name: formation1, password: "formation1" }
-  - { db: data, name: formation2, password: "formation2" }
-  - { db: data, name: formation3, password: "formation3" }
-  - { db: data, name: formation4, password: "formation4" }
-  - { db: data, name: formation5, password: "formation5" }
-  - { db: data, name: formation6, password: "formation6" }
-  - { db: data, name: formation7, password: "formation7" }
-  - { db: data, name: formation8, password: "formation8" }
-  - { db: data, name: formation9, password: "formation9" }
+  - { db: data, name: formation1, password: "demo" }
+  - { db: data, name: formation2, password: "demo" }
+  - { db: data, name: formation3, password: "demo" }
+  - { db: data, name: formation4, password: "demo" }
+  - { db: data, name: formation5, password: "demo" }
+  - { db: data, name: formation6, password: "demo" }
+  - { db: data, name: formation7, password: "demo" }
+  - { db: data, name: formation8, password: "demo" }
+  - { db: data, name: formation9, password: "demo" }
 postgresql_schemas:
   - { db: hive, name: hive, owner: hive }
   - { db: data, name: mpatron, owner: mpatron }
@@ -73,4 +73,6 @@ file_or_directory_to_delete:
   - /etc/systemd/system/hadoop-namenode.service
   - /etc/systemd/system/hadoop-secondarynamenode.service
   - /etc/systemd/system/hadoop-resourcemanager.service
+  - /etc/systemd/system/hadoop-yarn.service
+  - /etc/systemd/system/hadoop-dfs.service
   - /var/lib/pgsql
