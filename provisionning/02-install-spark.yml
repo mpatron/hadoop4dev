@@ -15,18 +15,24 @@
   tasks:
 
   ## Spark
-    # curl -OL https://dlcdn.apache.org/hadoop/common/{{ install_hadoop_file }}/{{ install_hadoop_file }}.tar.gz
+    # curl -OL https://dlcdn.apache.org/hadoop/common/{{ install_hadoop_file }}/{{ install_hadoop_file_zip }}
     - name: Download file Spark3 for Hadoop3
       ansible.builtin.get_url:
-        url: https://dlcdn.apache.org/spark/{{ install_spark_file }}/{{ install_spark_file }}-bin-hadoop3.tgz
-        dest: "{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3.tgz"
+        url: https://dlcdn.apache.org/spark/{{ install_spark_file }}/{{ install_spark_file_zip }}
+        dest: "{{ install_hadoop_dir }}/{{ install_spark_file_zip }}"
         checksum: sha256:173651a8a00f5bf0ee27b74d817e0e52eed9daa49fd66d59718994974d1d367d
         mode: '0644'
         validate_certs: false
-    # sudo tar xvfz {{ install_hadoop_file }}.tar.gz -C {{ install_hadoop_dir }}/
+      when: inventory_hostname == hdfs_namenodes[0]
+    - name: "Copy Remote-To-Remote from {{ hdfs_namenodes[0] }}"
+      ansible.posix.synchronize:
+        src: "{{ install_hadoop_dir }}/{{ install_spark_file_zip }}"
+        dest: "{{ install_hadoop_dir }}/{{ install_spark_file_zip }}"
+      delegate_to: "{{ hdfs_namenodes[0] }}"
+    # sudo tar xvfz {{ install_hadoop_file_zip }} -C {{ install_hadoop_dir }}/
     - name: Unarchive a file that is already on the remote machine
       ansible.builtin.unarchive:
-        src: "{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3.tgz"
+        src: "{{ install_hadoop_dir }}/{{ install_spark_file_zip }}"
         dest: "{{ install_hadoop_dir }}"
         owner: "{{ hadoop_user }}"
         group: "{{ hadoop_user }}"
