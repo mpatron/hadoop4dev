@@ -24,7 +24,7 @@ public class Main {
       @Override
       public void onJobStart(SparkListenerJobStart jobStart) {
         super.onJobStart(jobStart);
-        logger.info("!!!! onJobStart !!!!! ");
+        logger.info(String.format("!!!! onJobStart with %s !!!!! ", System.getProperty("user.name")));
       }
   
       @Override
