@@ -12,6 +12,9 @@ install_spark_file: spark-3.5.3
 # https://dlcdn.apache.org/hive/hive-4.0.1/apache-hive-4.0.1-bin.tar.gz
 install_hive_file: hive-4.0.1
 
+install_hadoop_dirname_unzip: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}"
+install_spark_dirname_unzip: "{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3"
+
 install_hadoop_file_zip: "{{ install_hadoop_file }}.tar.gz"
 install_spark_file_zip: "{{ install_spark_file }}-bin-hadoop3.tgz"
 

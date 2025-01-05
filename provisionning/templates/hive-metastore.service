@@ -11,7 +11,7 @@ Requires=network-online.target
 User={{ hive_user }}
 Group={{ hive_user }}
 Type=simple
-Environment="HADOOP_HOME={{ install_hadoop_dir }}/{{ install_hadoop_file }}"
+Environment="HADOOP_HOME={{ install_hadoop_dirname_unzip }}"
 Environment="HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop"
 ExecStart=/bin/bash -lc '{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/bin/hive --service metastore --verbose >>/tmp/hivemetastore.log 2>&1'
 # ExecStart=/bin/bash -lc '{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/bin/hive --service metastore --verbose >/tmp/hivemetastore-$(date "+%Y%m%d%H%M%S").log 2>&1'

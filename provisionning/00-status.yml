@@ -30,7 +30,7 @@
       ansible.builtin.command: "{{ item }}"
       args:
         creates: "{{ install_hadoop_dir }}/disk/nn/current/VERSION"
-        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+        chdir: "{{ install_hadoop_dirname_unzip }}/bin"
       become: true
       become_user: "{{ hadoop_user }}"
       when: inventory_hostname == hdfs_namenodes[0]

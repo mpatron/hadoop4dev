@@ -166,7 +166,7 @@
     - name: Create command on Master HDFS CLuster
       ansible.builtin.command: "{{ item }}"
       args:
-        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+        chdir: "{{ install_hadoop_dirname_unzip }}/bin"
       become: true
       become_user: "{{ hadoop_user }}"
       register: my_output
@@ -180,7 +180,7 @@
     - name: "Download postgresql.jar and put it on hive-server /hadoop/apache-hive-4.0.1-bin/lib"
       ansible.builtin.command: "{{ item }}"
       args:
-        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+        chdir: "{{ install_hadoop_dirname_unzip }}/bin"
       become: true
       become_user: "{{ hive_user }}"
       register: my_output

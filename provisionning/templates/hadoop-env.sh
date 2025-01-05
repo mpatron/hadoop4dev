@@ -55,7 +55,7 @@ export JAVA_HOME=/usr/lib/jvm/java
 
 # Location of Hadoop.  By default, Hadoop will attempt to determine
 # this location based upon its execution path.
-export HADOOP_HOME={{ install_hadoop_dir }}/{{ install_hadoop_file }}
+export HADOOP_HOME={{ install_hadoop_dirname_unzip }}
 
 # Location of Hadoop's configuration information.  i.e., where this
 # file is living. If this is not defined, Hadoop will attempt to

@@ -21,6 +21,8 @@
         url: https://dlcdn.apache.org/spark/{{ install_spark_file }}/{{ install_spark_file_zip }}
         dest: "{{ install_hadoop_dir }}/{{ install_spark_file_zip }}"
         checksum: sha256:173651a8a00f5bf0ee27b74d817e0e52eed9daa49fd66d59718994974d1d367d
+        owner: "{{ hadoop_user }}"
+        group: "{{ hadoop_user }}"
         mode: '0644'
         validate_certs: false
       when: inventory_hostname == hdfs_namenodes[0]
@@ -36,19 +38,20 @@
         dest: "{{ install_hadoop_dir }}"
         owner: "{{ hadoop_user }}"
         group: "{{ hadoop_user }}"
+        creates: "{{ install_spark_dirname_unzip }}"
         remote_src: true
     - name: Add another bin dir to system-wide $PATH.
       ansible.builtin.copy:
         dest: /etc/profile.d/03-spark-path.sh
         mode: '0644'
         content: |
-          export SPARK_HOME={{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3
+          export SPARK_HOME={{ install_spark_dirname_unzip }}
           export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
           export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH
     - name: Copy Hive configuration in Spark conf directory
       ansible.builtin.template:
         src: "{{ item }}"
-        dest: "{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/conf"
+        dest: "{{ install_spark_dirname_unzip }}/conf"
         owner: "{{ hadoop_user }}"
         group: "{{ hadoop_user }}"
         mode: '0644'
@@ -57,7 +60,7 @@
     - name: Install configure file in /etc/hadoop/{{ item }}
       ansible.builtin.template:
         src: "{{ item }}"
-        dest: "{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/conf/{{ item }}"
+        dest: "{{ install_spark_dirname_unzip }}/conf/{{ item }}"
         owner: "{{ hadoop_user }}"
         group: "{{ hadoop_user }}"
         mode: '0644'
@@ -66,7 +69,7 @@
     - name: Create command on HDFS CLuster for spark
       ansible.builtin.command: "{{ item }}"
       args:
-        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+        chdir: "{{ install_hadoop_dirname_unzip }}/bin"
       become: true
       become_user: "{{ hadoop_user }}"
       when: inventory_hostname == hdfs_namenodes[0]
@@ -82,13 +85,13 @@
     - name: Copy postgresql jar on HDFS CLuster for spark
       ansible.builtin.command: "{{ item }}"
       args:
-        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+        chdir: "{{ install_hadoop_dirname_unzip }}/bin"
       become: true
       become_user: "{{ hadoop_user }}"
       register: my_output
       changed_when: my_output.rc == 0
       loop:
-        - bash -lc 'curl -L -O --output-dir {{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/jars
+        - bash -lc 'curl -L -O --output-dir {{ install_spark_dirname_unzip }}/jars
           https://jdbc.postgresql.org/download/postgresql-42.7.4.jar'
     - name: "Copy services SPARK History Service"
       ansible.builtin.template:
@@ -100,8 +103,8 @@
       when: inventory_hostname == hdfs_namenodes[0]
       loop:
         - { description: "SPARK History Service",
-            start: "nohup /bin/bash -lc 'nohup {{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/sbin/start-history-server.sh >>/tmp/start-history-server.log 2>&1'",
-            stop: "nohup /bin/bash -lc '{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3/sbin/stop-history-server.sh >>/tmp/stop-history-server.log 2>&1'",
+            start: "nohup /bin/bash -lc 'nohup {{ install_spark_dirname_unzip }}/sbin/start-history-server.sh >>/tmp/start-history-server.log 2>&1'",
+            stop: "nohup /bin/bash -lc '{{ install_spark_dirname_unzip }}/sbin/stop-history-server.sh >>/tmp/stop-history-server.log 2>&1'",
             filename: "spark-history.service" }
     - name: Install SPARK History Service
       ansible.builtin.systemd_service:

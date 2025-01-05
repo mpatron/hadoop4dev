@@ -63,11 +63,12 @@
         dest: "{{ install_hadoop_dir }}"
         owner: "{{ hadoop_user }}"
         group: "{{ hadoop_user }}"
+        creates: "{{ install_hadoop_dirname_unzip }}"
         remote_src: true
     # Fix bug hadoop executable cmd file tar in bin and sbin
     - name: "[Fix bug hadoop tar] cmd are executable in unix mode"
       ansible.builtin.find:
-        paths: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+        paths: "{{ install_hadoop_dirname_unzip }}/bin"
         file_type: file
         patterns: "*.cmd"
       register: filelist
@@ -81,7 +82,7 @@
       with_items: "{{ filelist.files }}"
     - name: "[Fix bug hadoop tar] cmd are executable in unix mode"
       ansible.builtin.find:
-        paths: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin"
+        paths: "{{ install_hadoop_dirname_unzip }}/sbin"
         file_type: file
         patterns: "*.cmd"
       register: filelist
@@ -109,8 +110,8 @@
         group: root
         mode: '0644'
         content: |
-          export PATH=$PATH:{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin:{{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin
-          export HADOOP_HOME={{ install_hadoop_dir }}/{{ install_hadoop_file }}
+          export PATH=$PATH:{{ install_hadoop_dirname_unzip }}/bin:{{ install_hadoop_dirname_unzip }}/sbin
+          export HADOOP_HOME={{ install_hadoop_dirname_unzip }}
           export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
   #  - name: Set env variables
   #    blockinfile:
@@ -119,7 +120,7 @@
   #        export {{ item.name }}={{ item.line }}
   #      marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
   #    loop:
-  #      - { name: HADOOP_HOME, line: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}" }
+  #      - { name: HADOOP_HOME, line: "{{ install_hadoop_dirname_unzip }}" }
   #      - { name: PATH, line: "$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin" }
   #      - { name: JAVA_HOME, line: "/usr/lib/jvm/java" }
     - name: Test env
@@ -134,7 +135,7 @@
     - name: Copy hadoop configuration
       ansible.builtin.copy:
         src: "files/{{ item }}"
-        dest: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/etc/hadoop"
+        dest: "{{ install_hadoop_dirname_unzip }}/etc/hadoop"
         owner: "{{ hadoop_user }}"
         group: "{{ hadoop_user }}"
         mode: '0644'
@@ -143,7 +144,7 @@
     - name: Install configure file in /etc/hadoop/{{ item }}
       ansible.builtin.template:
         src: "{{ item }}"
-        dest: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/etc/hadoop/{{ item }}"
+        dest: "{{ install_hadoop_dirname_unzip }}/etc/hadoop/{{ item }}"
         owner: "{{ hadoop_user }}"
         group: "{{ hadoop_user }}"
         mode: '0644'
@@ -178,8 +179,8 @@
       when: "'namenodes' in group_names"
       loop:
         - { description: "Hadoop HDFS namenode service",
-            start: "nohup /bin/bash -lc 'nohup {{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin/start-dfs.sh >>/tmp/start-dfs.log 2>&1'",
-            stop: "nohup /bin/bash -lc '{{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin/stop-dfs.sh >>/tmp/stop-dfs.log 2>&1'",
+            start: "nohup /bin/bash -lc 'nohup {{ install_hadoop_dirname_unzip }}/sbin/start-dfs.sh >>/tmp/start-dfs.log 2>&1'",
+            stop: "nohup /bin/bash -lc '{{ install_hadoop_dirname_unzip }}/sbin/stop-dfs.sh >>/tmp/stop-dfs.log 2>&1'",
             filename: "hadoop-dfs.service" }
     - name: Stop HDFS Service
       ansible.builtin.systemd_service:
@@ -194,7 +195,7 @@
       ansible.builtin.command: "{{ item }}"
       args:
         creates: "{{ install_hadoop_dir }}/disk/nn/current/VERSION"
-        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+        chdir: "{{ install_hadoop_dirname_unzip }}/bin"
       become: true
       become_user: "{{ hadoop_user }}"
       when: inventory_hostname == hdfs_namenodes[0]
@@ -220,8 +221,8 @@
       when: "'resourcemanagers' in group_names"
       loop:
         - { description: "Hadoop YARN resource service",
-            start: "nohup /bin/bash -lc 'nohup {{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin/start-yarn.sh >>/tmp/start-yarn.log 2>&1'",
-            stop: "nohup /bin/bash -lc '{{ install_hadoop_dir }}/{{ install_hadoop_file }}/sbin/stop-yarn.sh >>/tmp/stop-yarn.log 2>&1'",
+            start: "nohup /bin/bash -lc 'nohup {{ install_hadoop_dirname_unzip }}/sbin/start-yarn.sh >>/tmp/start-yarn.log 2>&1'",
+            stop: "nohup /bin/bash -lc '{{ install_hadoop_dirname_unzip }}/sbin/stop-yarn.sh >>/tmp/stop-yarn.log 2>&1'",
             filename: "hadoop-yarn.service" }
     - name: Start HDFS Service
       ansible.builtin.systemd_service:
@@ -235,7 +236,7 @@
     - name: Create command on HDFS CLuster for HDFS et YARN
       ansible.builtin.command: "{{ item }}"
       args:
-        chdir: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}/bin"
+        chdir: "{{ install_hadoop_dirname_unzip }}/bin"
       become: true
       become_user: "{{ hadoop_user }}"
       when: inventory_hostname == hdfs_namenodes[0]
