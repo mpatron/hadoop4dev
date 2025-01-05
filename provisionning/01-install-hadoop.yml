@@ -50,6 +50,12 @@
         group: "{{ hadoop_user }}"
         mode: '0644'
         validate_certs: false
+      when: inventory_hostname == hdfs_namenodes[0]
+    - name: "Copy Remote-To-Remote from {{ hdfs_namenodes[0] }}"
+      ansible.posix.synchronize:
+        src: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}.tar.gz"
+        dest: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}.tar.gz"
+      delegate_to: "{{ hdfs_namenodes[0] }}"
     # sudo tar xvfz {{ install_hadoop_file }}.tar.gz -C {{ install_hadoop_dir }}/
     - name: Unarchive a file that is already on the remote machine
       ansible.builtin.unarchive:

@@ -107,4 +107,3 @@
       when: inventory_hostname == hdfs_namenodes[0]
       with_items:
         - spark-history
-
