@@ -7,10 +7,13 @@ install_hadoop_dir: /hadoop
 
 # https://dlcdn.apache.org/hadoop/common/hadoop-3.4.1/hadoop-3.4.1.tar.gz
 install_hadoop_file: hadoop-3.4.1
+install_hadoop_file_hash: "sha512:09cda6943625bc8e4307deca7a4df76d676a51aca1b9a0171938b793521dfe1ab5970fdb9a490bab34c12a2230ffdaed2992bad16458169ac51b281be1ab6741"
 # https://dlcdn.apache.org/spark/spark-3.5.3/spark-3.5.3-bin-hadoop3.tgz
-install_spark_file: spark-3.5.3
+install_spark_file: spark-3.5.4
+install_spark_file_hash: "sha512:33b6a78c155213b779e2c0d1eb6842cd915e66d47e99dd96959a67aedbed7b5afa1e169fed7e07741f9b6fed7a38204cae7431bf9a93b95bb74f095cf9583cb6"
 # https://dlcdn.apache.org/hive/hive-4.0.1/apache-hive-4.0.1-bin.tar.gz
 install_hive_file: hive-4.0.1
+install_hive_file_hash: "sha256:2bf988a1ed17437b1103e367939c25a13f64d36cf6d1c3bef8c3f319f0067619"
 
 install_hadoop_dirname_unzip: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}"
 install_spark_dirname_unzip: "{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3"

@@ -158,7 +158,7 @@ done
 sudo lvextend -L +8G  /dev/mapper/lvm-home --resizefs
 # Mettre le volume à 10G (pas pareil)
 lvextend -L10G /dev/mapper/lvm-home --resizefs
-
+lvreduce --resizefs -L 64M /dev/mapper/lvm-home
 ~~~
 
 ~~~bash

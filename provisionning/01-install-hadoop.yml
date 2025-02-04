@@ -44,7 +44,7 @@
     - name: Download file for Hadoop3
       ansible.builtin.get_url:
         url: https://dlcdn.apache.org/hadoop/common/{{ install_hadoop_file }}/{{ install_hadoop_file_zip }}
-        checksum: sha512:09cda6943625bc8e4307deca7a4df76d676a51aca1b9a0171938b793521dfe1ab5970fdb9a490bab34c12a2230ffdaed2992bad16458169ac51b281be1ab6741
+        checksum: {{ install_hadoop_file_hash }}
         dest: "{{ install_hadoop_dir }}/{{ install_hadoop_file_zip }}"
         owner: "{{ hadoop_user }}"
         group: "{{ hadoop_user }}"
