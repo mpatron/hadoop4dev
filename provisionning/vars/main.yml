@@ -52,7 +52,12 @@ postgresql_privs:
   - { db: data, roles: formation7, privs: ALL, type: database }
   - { db: data, roles: formation8, privs: ALL, type: database }
   - { db: data, roles: formation9, privs: ALL, type: database }
-
+hadoop_services:
+  - "hadoop-datanode.service"
+  - "hadoop-nodemanager.service"
+  - "hadoop-namenode.service"
+  - "hadoop-secondarynamenode.service"
+  - "hadoop-resourcemanager.service"
 user_name_to_delete:
   - hdfs
   - yarn

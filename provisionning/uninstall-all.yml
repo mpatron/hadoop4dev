@@ -6,44 +6,21 @@
   vars_files:
     - vars/main.yml
 
-  handlers:
-    - name: "Stopped hadoop-datanode.service"
-      ansible.builtin.service:
-        name: hadoop-datanode.service
-        state: stopped
-    - name: "Stopped hadoop-nodemanager.service"
-      ansible.builtin.service:
-        name: hadoop-nodemanager.service
-        state: stopped
-    - name: "Stopped hadoop-namenode.service"
-      ansible.builtin.service:
-        name: hadoop-namenode.service
-        state: stopped
-    - name: "Stopped hadoop-secondarynamenode.service"
-      ansible.builtin.service:
-        name: hadoop-secondarynamenode.service
-        state: stopped
-    - name: "Stopped hadoop-resourcemanager.service"
-      ansible.builtin.service:
-        name: hadoop-resourcemanager.service
-        state: stopped
   tasks:
+
+# ========= Stop list of services  ========================================
+    - name: Populate service facts
+      ansible.builtin.service_facts:
     - name: Eteindre les services en premier car ils peuvent être en reload automatique
       ansible.builtin.systemd_service:
         name: "{{ item }}"
-        masked: true
+        state: stopped
+        enabled: false
+      when: "item in services"
+      with_items: '{{ hadoop_services }}'
       register: my_output
-      # failed_when: 'my_output.rc | default("") == 0 or (my_output.rc != 0 and not (my_output.rc == 4 or my_output.rc == 5))'
-      # notify: "Stopped {{ item }}"
-      with_items:
-        - hadoop-datanode.service
-        - hadoop-nodemanager.service
-        - hadoop-namenode.service
-        - hadoop-secondarynamenode.service
-        - hadoop-resourcemanager.service
-#    - name: Display variable my_output Temporary
-#      ansible.builtin.debug:
-#        var: my_output
+
+# ========= Kill processes  ========================================
     - name: Get running processes
       ansible.builtin.shell:
         cmd: |
@@ -54,7 +31,7 @@
       failed_when: 'running_processes.rc != 0'
       changed_when: 'running_processes.rc != 0'
     - name: Kill running processes
-      ansible.builtin.command: "kill -9 {{ item }}"
+      ansible.builtin.command: "kill {{ item }}"
       register: my_output
       changed_when: 'my_output.rc != 0'
       with_items: "{{ running_processes.stdout_lines }}"
