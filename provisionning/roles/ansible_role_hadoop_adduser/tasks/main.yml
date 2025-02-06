@@ -2,7 +2,7 @@
 # tasks file for ansible_role_hadoop_adduser
 # sudo bash -c "printf '%s\n%s\n' 'hadoop' 'hadoop' | passwd hadoop"
 # printf '%s\n' "hadoop" | mkpasswd -s --method=sha-512
-# ansible hadoop -i inventories/jobjects --become --module-name raw --args "printf '%s\n%s\n' 'hadoop' 'hadoop' | passwd hadoop"
+# ansible hadoop -i <inventory> --become --module-name raw --args "printf '%s\n%s\n' 'hadoop' 'hadoop' | passwd hadoop"
 - name: Install a list of packages with a list variable for create  hash passwd
   ansible.builtin.dnf:
     name: "{{ packages }}"
