@@ -191,7 +191,9 @@ hive> drop database test cascade;
 ~~~sql
 SHOW DATABASES;
 CREATE DATABASE <USER>db;
+USE  <USER>db;
 CREATE TABLE IF NOT EXISTS <USER>db.employees (id int, name string, age int, gender string ) COMMENT 'employees table' ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+// CREATE TABLE IF NOT EXISTS mpatrondb.employees (id int, name string, age int, gender string ) COMMENT 'employees table' STORED AS PARQUET;
 SHOW TABLES;
 INSERT INTO <USER>db.employees values(1,'formation1',23,'M');
 INSERT INTO <USER>db.employees values(2,'formation2',32,'F');
@@ -202,7 +204,7 @@ INSERT INTO <USER>db.employees values(6,'formation6',21,'M');
 INSERT INTO <USER>db.employees values(7,'formation7',29,'F');
 INSERT INTO <USER>db.employees values(8,'formation8',30,'M');
 INSERT INTO <USER>db.employees values(9,'formation9',25,'M');
-ANALYZE TABLE TEST COMPUTE STATISTICS;
+ANALYZE TABLE <USER>db.employees COMPUTE STATISTICS;
 SELECT COUNT(*) FROM <USER>db.employees;
 SELECT * FROM <USER>db.employees WHERE gender='F' LIMIT 2;
 ~~~
