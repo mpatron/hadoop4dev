@@ -100,7 +100,6 @@
     - formation7
     - formation8
     - formation9
-    # ssh node1.jobjects.net
     # sudo su - hadoop
     # for i in {1..12}; do hdfs dfs -mkdir /user/formation$i; done;
     # for i in {1..12}; do hdfs dfs -chown formation$i:formation$i /user/formation$i; done;
