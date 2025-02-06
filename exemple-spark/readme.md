@@ -35,13 +35,13 @@ ansible hadoop -u mpatron -m raw -a "sudo chmod 775 /home/mpatron/spark-warehous
 |   mpatrondb|
 |        test|
 +------------+
->>> spark.sql('show tables from default').show()
+>>> spark.sql("show tables from default").show()
 +--------+---------+-----------+
 |database|tableName|isTemporary|
 +--------+---------+-----------+
 |        |    shows|       true|
 +--------+---------+-----------+
->>> spark.sql('show tables from global_temp').show()
+>>> spark.sql("show tables from global_temp").show()
 +-----------+---------+-----------+
 |   database|tableName|isTemporary|
 +-----------+---------+-----------+
