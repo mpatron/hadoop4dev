@@ -20,7 +20,7 @@
       ansible.builtin.get_url:
         url: https://dlcdn.apache.org/spark/{{ install_spark_file }}/{{ install_spark_file_zip }}
         dest: "{{ install_hadoop_dir }}/{{ install_spark_file_zip }}"
-        checksum: {{ install_spark_file_hash }}
+        checksum: "{{ install_spark_file_hash }}"
         owner: "{{ hadoop_user }}"
         group: "{{ hadoop_user }}"
         mode: '0644'

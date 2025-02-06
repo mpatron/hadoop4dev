@@ -139,7 +139,7 @@
       ansible.builtin.get_url:
         url: https://dlcdn.apache.org/hive/{{ install_hive_file }}/apache-{{ install_hive_file }}-bin.tar.gz
         dest: "{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin.tar.gz"
-        checksum: {{ install_hive_file_hash }}
+        checksum: "{{ install_hive_file_hash }}"
         mode: '0644'
         validate_certs: false
     # sudo tar xvfz {{ install_hadoop_file_zip }} -C {{ install_hadoop_dir }}/
