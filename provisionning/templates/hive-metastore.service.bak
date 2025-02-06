@@ -1,7 +1,8 @@
-## /etc/systemd/system/hive-hiveserver2.service
+## ## /etc/systemd/system/hive-metastore.service
 ## Do not forget to change the PID directory
+
 [Unit]
-Description=HiveServer2
+Description=Hive Server Metastore
 # After=syslog.target network.target remote-fs.target nss-lookup.target network-online.target hdfs.service yarn.service
 After=syslog.target network.target remote-fs.target nss-lookup.target network-online.target
 Requires=network-online.target
@@ -12,14 +13,13 @@ Group={{ hive_user }}
 Type=simple
 Environment="HADOOP_HOME={{ install_hadoop_dirname_unzip }}"
 Environment="HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop"
-Environment="HIVE_HOME={{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin"
-ExecStart=/bin/bash -lc '{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/bin/hive --service hiveserver2 >>/tmp/hiveserver2.log 2>&1'
-# ExecStart=/bin/bash -lc '{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/bin/hive --service hiveserver2 >/tmp/hiveserver2-$(date "+%Y%m%d%H%M%S").log 2>&1'
-# ExecStop=ps aux | awk '{print $1,$2}' | grep hive | awk '{print $2}' | xargs kill >/dev/null 2>&1
+ExecStart=/bin/bash -lc '{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/bin/hive --service metastore --verbose >>/tmp/hivemetastore.log 2>&1'
+# ExecStart=/bin/bash -lc '{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/bin/hive --service metastore --verbose >/tmp/hivemetastore-$(date "+%Y%m%d%H%M%S").log 2>&1'
 WorkingDirectory={{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/bin
 TimeoutStartSec=5min
-#Restart=on-failure
+# Restart=on-failure
 Restart=no
+# PIDFile={{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin/conf/metastore.pid
 
 [Install]
 WantedBy=multi-user.target
