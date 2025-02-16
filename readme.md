@@ -1,4 +1,4 @@
-# Installation de hadoop avec Ansible (on working)
+# Installation de hadoop avec Ansible
 
 ## Quick
 
