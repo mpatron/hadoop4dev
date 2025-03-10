@@ -130,7 +130,30 @@ spark.sql("DESCRIBE TABLE sales").show()
 |   mpatrondb|
 |        test|
 +------------+
+~~~
 
+## Hive
+
+~~~sql
+SHOW DATABASES;
+CREATE DATABASE hivedb;
+CREATE TABLE IF NOT EXISTS hivedb.employees (id int, name string, age int, gender string ) COMMENT 'employees table' ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+SHOW TABLES;
+INSERT INTO hivedb.employees values(1,'formation1',23,'M');
+INSERT INTO hivedb.employees values(2,'formation2',32,'F');
+INSERT INTO hivedb.employees values(3,'formation3',27,'M');
+INSERT INTO hivedb.employees values(4,'formation4',24,'F');
+INSERT INTO hivedb.employees values(5,'formation5',25,'F');
+INSERT INTO hivedb.employees values(6,'formation6',21,'M');
+INSERT INTO hivedb.employees values(7,'formation7',29,'F');
+INSERT INTO hivedb.employees values(8,'formation8',30,'M');
+INSERT INTO hivedb.employees values(9,'formation9',25,'M');
+ANALYZE TABLE TEST COMPUTE STATISTICS;
+SELECT COUNT(*) FROM hivedb.employees;
+SELECT * FROM hivedb.employees WHERE gender='F' LIMIT 2;
+~~~
+
+~~~bash
 >>> spark.catalog.listTables('mpatrondb')
 [Table(name='employee', catalog='spark_catalog', namespace=['mpatrondb'], description='Employee Table', tableType='EXTERNAL', isTemporary=False)]
 >>> spark.sql("select count(*) from mpatrondb.employee").show()
@@ -140,8 +163,6 @@ spark.sql("DESCRIBE TABLE sales").show()
 |       9|
 +--------+
 ~~~
-
-## Hive
 
 ~~~bash
 beeline> !connect jdbc:hive2://node1.jobjects.net:10000/
