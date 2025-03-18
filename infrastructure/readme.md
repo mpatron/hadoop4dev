@@ -63,5 +63,5 @@ VAGRANT_DISABLE_STRICT_DEPENDENCY_ENFORCEMENT=1 vagrant plugin install ./vagrant
 ## Cleanning
 
 ~~~bash
-for N in {0..5}; do ssh-keygen -f '/home/mickael/.ssh/known_hosts' -R 192.168.56.14${N}; done
+for N in {0..5}; do ssh-keygen -f '/home/mickael/.ssh/known_hosts' -R 192.168.124.14${N}; done
 ~~~

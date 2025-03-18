@@ -148,7 +148,7 @@ ansible hadoop -i inventories/jobjects --become --module-name raw --args "shutdo
 ansible hadoop -i inventories/jobjects --become --module-name raw --args "uptime -s"
 ansible-playbook -i inventories/jobjects hadoop-uninstall.yml
 for N in {0..5}; do
-  ssh-keygen -f /home/${USER}/.ssh/known_hosts -R 192.168.56.14${N}
+  ssh-keygen -f /home/${USER}/.ssh/known_hosts -R 192.168.124.14${N}
   ssh-keygen -f /home/${USER}/.ssh/known_hosts -R node${N}.jobjects.net
 done
 ~~~

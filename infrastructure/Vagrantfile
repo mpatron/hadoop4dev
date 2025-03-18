@@ -20,6 +20,7 @@ Vagrant.configure("2") do |config|
     vb.linked_clone = true
   end
   config.vm.provider :libvirt do |lbv|
+    lbv.qemu_use_session = false
     lbv.cpus = VM_CPU
     lbv.nested = true
     lbv.memory = VM_RAM
@@ -29,10 +30,10 @@ Vagrant.configure("2") do |config|
   (0..(VM_COUNT-1)).each do |i|
     config.vm.define "node#{i}" do |node|
       node.vm.hostname = "node#{i}.jobjects.net"
-      node.vm.network "private_network", ip: "192.168.56.14#{i}"
+      node.vm.network "private_network", ip: "192.168.124.14#{i}"
       node.vm.provision "shell", run: "always", inline: <<-SHELL1
 for N in {0..#{VM_COUNT}}; do
-  [[ ! $(grep "192.168.56.14${N} node${N}.jobjects.net node${N}" /etc/hosts) ]] && echo $(echo "192.168.56.14${N} node${N}.jobjects.net node${N}" | sudo tee -a /etc/hosts)
+  [[ ! $(grep "192.168.124.14${N} node${N}.jobjects.net node${N}" /etc/hosts) ]] && echo $(echo "192.168.124.14${N} node${N}.jobjects.net node${N}" | sudo tee -a /etc/hosts)
 done
 sudo sed -i '/127.0.1.1/d' /etc/hosts
 sudo hostnamectl set-hostname node#{i}.jobjects.net
@@ -66,7 +67,7 @@ for N in {0..#{VM_COUNT}}; do
   fi
   if [[ ! $(grep "Host node${N}" /home/vagrant/.ssh/config) ]]; then
     echo "Host node${N}" | sudo tee -a /home/vagrant/.ssh/config
-    echo "    Hostname 192.168.56.14${N}" | sudo tee -a /home/vagrant/.ssh/config
+    echo "    Hostname 192.168.124.14${N}" | sudo tee -a /home/vagrant/.ssh/config
     echo "    StrictHostKeyChecking no" | sudo tee -a /home/vagrant/.ssh/config
   fi
 done

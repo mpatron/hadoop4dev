@@ -3,27 +3,27 @@
 all:
   hosts:
     node0.jobjects.net:
-      ansible_host: 192.168.56.140
+      ansible_host: 192.168.124.140
       ansible_ssh_user: vagrant
       ansible_ssh_pass: vagrant
     node1.jobjects.net:
-      ansible_host: 192.168.56.141
+      ansible_host: 192.168.124.141
       ansible_ssh_user: vagrant
       ansible_ssh_pass: vagrant
     node2.jobjects.net:
-      ansible_host: 192.168.56.142
+      ansible_host: 192.168.124.142
       ansible_ssh_user: vagrant
       ansible_ssh_pass: vagrant
     node3.jobjects.net:
-      ansible_host: 192.168.56.143
+      ansible_host: 192.168.124.143
       ansible_ssh_user: vagrant
       ansible_ssh_pass: vagrant
     node4.jobjects.net:
-      ansible_host: 192.168.56.144
+      ansible_host: 192.168.124.144
       ansible_ssh_user: vagrant
       ansible_ssh_pass: vagrant
     node5.jobjects.net:
-      ansible_host: 192.168.56.145
+      ansible_host: 192.168.124.145
       ansible_ssh_user: vagrant
       ansible_ssh_pass: vagrant
   vars:
