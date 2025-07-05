@@ -9,12 +9,12 @@ ssh ${USER}@node1.jobjects.net
 
 ![Commment se connecter au cluster](images/powershell.png "Connection au cluster")
 
-Les services HDFS, Yarn Spark History et Hive Ser
+Les services HDFS, Yarn Spark History et Hive Server
 
-HDFS:          [http://node0.jobjects.net:9870](http://node0.jobjects.net:9870)
-YARN:          [http://node1.jobjects.net:8088](http://node1.jobjects.net:8088)
-SPARK_HISTORY: [http://node0.jobjects.net:18080](http://node0.jobjects.net:18080)
-HIVE_SERVER:   [http://node1.jobjects.net:10002](http://node1.jobjects.net:10002)
+- HDFS:          [http://node0.jobjects.net:9870](http://node0.jobjects.net:9870)
+- YARN:          [http://node1.jobjects.net:8088](http://node1.jobjects.net:8088)
+- SPARK_HISTORY: [http://node0.jobjects.net:18080](http://node0.jobjects.net:18080)
+- HIVE_SERVER:   [http://node1.jobjects.net:10002](http://node1.jobjects.net:10002)
 
 ## Prise en main des commandes Unix Hadoop
 

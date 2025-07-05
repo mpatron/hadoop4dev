@@ -5,21 +5,26 @@ swap_file_state: absent
 hadoop_user: hadoop
 install_hadoop_dir: /hadoop
 
-# https://dlcdn.apache.org/hadoop/common/hadoop-3.4.1/hadoop-3.4.1.tar.gz
+# dlcdn.apache.org
 install_hadoop_file: hadoop-3.4.1
+install_hadoop_file_url: "https://archive.apache.org/dist/hadoop/core/hadoop-3.4.1/hadoop-3.4.1.tar.gz"
 install_hadoop_file_hash: "sha512:09cda6943625bc8e4307deca7a4df76d676a51aca1b9a0171938b793521dfe1ab5970fdb9a490bab34c12a2230ffdaed2992bad16458169ac51b281be1ab6741"
-# https://dlcdn.apache.org/spark/spark-3.5.3/spark-3.5.3-bin-hadoop3.tgz
-install_spark_file: spark-3.5.4
-install_spark_file_hash: "sha512:df049be04119d4943f5c048108e511a95d05a7cdcf7f1256384a3a6caa322f7898b6b1b20b0ad45036887f4ae93ce5f17ac97906950b14f07532d94ed7fe1faa"
-# https://dlcdn.apache.org/hive/hive-4.0.1/apache-hive-4.0.1-bin.tar.gz
-install_hive_file: hive-4.0.1
-install_hive_file_hash: "sha256:2bf988a1ed17437b1103e367939c25a13f64d36cf6d1c3bef8c3f319f0067619"
-
 install_hadoop_dirname_unzip: "{{ install_hadoop_dir }}/{{ install_hadoop_file }}"
-install_spark_dirname_unzip: "{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3"
-
 install_hadoop_file_zip: "{{ install_hadoop_file }}.tar.gz"
+
+# https://archive.apache.org/dist/spark/spark-3.5.6/spark-3.5.6-bin-hadoop3.tgz
+install_spark_file: spark-3.5.4
+install_spark_file_url: "https://archive.apache.org/dist/spark/spark-3.5.4/spark-3.5.4-bin-hadoop3.tgz"
+install_spark_file_hash: "sha512:df049be04119d4943f5c048108e511a95d05a7cdcf7f1256384a3a6caa322f7898b6b1b20b0ad45036887f4ae93ce5f17ac97906950b14f07532d94ed7fe1faa"
+install_spark_dirname_unzip: "{{ install_hadoop_dir }}/{{ install_spark_file }}-bin-hadoop3"
 install_spark_file_zip: "{{ install_spark_file }}-bin-hadoop3.tgz"
+
+# https://archive.apache.org/dist/hive/hive-4.0.1/apache-hive-4.0.1-bin.tar.gz
+install_hive_file: hive-4.0.1
+install_hive_file_url: "https://archive.apache.org/dist/hive/hive-4.0.1/apache-hive-4.0.1-bin.tar.gz"
+install_hive_file_hash: "sha256:2bf988a1ed17437b1103e367939c25a13f64d36cf6d1c3bef8c3f319f0067619"
+install_hive_dirname_unzip: "{{ install_hadoop_dir }}/apache-{{ install_hive_file }}-bin"
+install_hile_file_zip: "apache-{{ install_hive_file }}-bin.tar.gz"
 
 hdfs_namenodes: "{{ groups.namenodes }}"
 yarn_resourcemanagers: "{{ groups.resourcemanagers }}"

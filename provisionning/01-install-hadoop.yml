@@ -20,7 +20,7 @@
         owner: "{{ hadoop_user }}"
         group: "{{ hadoop_user }}"
         mode: '0755'
-    - name: Create directory /hadoop if does not exist
+    - name: Create directory /hadoop/.local/bin if does not exist
       ansible.builtin.file:
         path: /home/hadoop/.local/bin
         state: directory
@@ -40,10 +40,9 @@
 # Hadoop
 
 ## Environnement
-    # curl -OL https://dlcdn.apache.org/hadoop/common/{{ install_hadoop_file }}/{{ install_hadoop_file_zip }}
     - name: Download file for Hadoop3
       ansible.builtin.get_url:
-        url: https://dlcdn.apache.org/hadoop/common/{{ install_hadoop_file }}/{{ install_hadoop_file_zip }}
+        url: "{{ install_hadoop_file_url }}"
         checksum: "{{ install_hadoop_file_hash }}"
         dest: "{{ install_hadoop_dir }}/{{ install_hadoop_file_zip }}"
         owner: "{{ hadoop_user }}"
@@ -66,13 +65,13 @@
         creates: "{{ install_hadoop_dirname_unzip }}"
         remote_src: true
     # Fix bug hadoop executable cmd file tar in bin and sbin
-    - name: "[Fix bug hadoop tar] cmd are executable in unix mode"
+    - name: "[Fix bug hadoop tar] cmd are executable in unix mode in bin"
       ansible.builtin.find:
         paths: "{{ install_hadoop_dirname_unzip }}/bin"
         file_type: file
         patterns: "*.cmd"
       register: filelist
-    - name: "[Fix bug hadoop tar] change permissions"
+    - name: "[Fix bug hadoop tar] change permissions for bin"
       ansible.builtin.file:
         path: "{{ item.path }}"
         state: file
@@ -80,13 +79,13 @@
         group: "{{ hadoop_user }}"
         mode: "0664"
       with_items: "{{ filelist.files }}"
-    - name: "[Fix bug hadoop tar] cmd are executable in unix mode"
+    - name: "[Fix bug hadoop tar] cmd are executable in unix mode in sbin"
       ansible.builtin.find:
         paths: "{{ install_hadoop_dirname_unzip }}/sbin"
         file_type: file
         patterns: "*.cmd"
       register: filelist
-    - name: "[Fix bug hadoop tar] change permissions"
+    - name: "[Fix bug hadoop tar] change permissions for sbin"
       ansible.builtin.file:
         path: "{{ item.path }}"
         state: file
@@ -95,7 +94,7 @@
         mode: "0664"
       with_items: "{{ filelist.files }}"
 
-    - name: Add another bin dir to system-wide $PATH.
+    - name: Add /etc/profile.d/01-java-path.sh var env to system-wide.
       ansible.builtin.copy:
         dest: /etc/profile.d/01-java-path.sh
         owner: root
@@ -103,7 +102,7 @@
         mode: '0644'
         content: |
           export JAVA_HOME=/usr/lib/jvm/java
-    - name: Add another bin dir to system-wide $PATH.
+    - name: Add /etc/profile.d/02-hadoop-path.sh var env to system-wide.
       ansible.builtin.copy:
         dest: /etc/profile.d/02-hadoop-path.sh
         owner: root
@@ -201,7 +200,7 @@
       when: inventory_hostname == hdfs_namenodes[0]
       loop:
         - bash -lc './hdfs namenode -format -nonInteractive'
-    - name: Start HDFS Service
+    - name: Start HDFS Service hadoop-dfs.service
       ansible.builtin.systemd_service:
         name: "{{ item }}"
         enabled: true
@@ -224,7 +223,7 @@
             start: "nohup /bin/bash -lc 'nohup {{ install_hadoop_dirname_unzip }}/sbin/start-yarn.sh >>/tmp/start-yarn.log 2>&1'",
             stop: "nohup /bin/bash -lc '{{ install_hadoop_dirname_unzip }}/sbin/stop-yarn.sh >>/tmp/stop-yarn.log 2>&1'",
             filename: "hadoop-yarn.service" }
-    - name: Start HDFS Service
+    - name: Start HDFS Service hadoop-yarn.service
       ansible.builtin.systemd_service:
         name: "{{ item }}"
         enabled: true
@@ -261,6 +260,9 @@
         - bash -lc 'hdfs dfs -mkdir -p /user/hive/warehouse'
         - bash -lc 'hdfs dfs -chmod 775 /user/hive/warehouse'
         - bash -lc 'hdfs dfs -chown hive:hadoop /user/hive/warehouse'
+        - bash -lc 'for i in {1..12}; do hdfs dfs -mkdir /user/formation$i; done;'
+        - bash -lc 'for i in {1..12}; do hdfs dfs -chown formation$i:formation$i /user/formation$i; done;'
+        - bash -lc 'for i in {1..12}; do hdfs dfs -chmod 775 /user/formation$i; done;'
 
 ## TODO Les services
 # systemctl --type=service | grep -i hadoop

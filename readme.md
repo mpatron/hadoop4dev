@@ -14,12 +14,22 @@ mpatron@workstation:$ cd ~/hadoop4dev/infrastructure
 mpatron@workstation:~/hadoop4dev/infrastructure$ vagrant ssh node0 -- hdfs dfs -ls /
 ~~~
 
+In /etc/hosts put this:
+
 ~~~txt
-HDFS:          http://node0.jobjects.net:9870
-YARN:          http://node1.jobjects.net:8088
-SPARK_HISTORY: http://node0.jobjects.net:18080
-HIVE_SERVER:   http://node1.jobjects.net:10002
+# Hadoop4Dev
+192.168.124.140	node0.jobjects.net	node0
+192.168.124.141	node1.jobjects.net	node1
+192.168.124.142	node2.jobjects.net	node2
+192.168.124.143	node3.jobjects.net	node3
+192.168.124.144	node4.jobjects.net	node4
+192.168.124.145	node5.jobjects.net	node5
 ~~~
+
+- HDFS:          [http://node0.jobjects.net:9870](http://node0.jobjects.net:9870)
+- YARN:          [http://node1.jobjects.net:8088](http://node1.jobjects.net:8088)
+- SPARK_HISTORY: [http://node0.jobjects.net:18080](http://node0.jobjects.net:18080)
+- HIVE_SERVER:   [http://node1.jobjects.net:10002](http://node1.jobjects.net:10002)
 
 ## Requirement
 
@@ -95,10 +105,10 @@ Sources :
 - [https://phoenixnap.com/kb/install-hive-on-ubuntu](https://phoenixnap.com/kb/install-hive-on-ubuntu)
 
 ~~~bash
-curl -OL https://dlcdn.apache.org/hadoop/common/hadoop-3.4.1/hadoop-3.4.1.tar.gz
+curl -OL https://archive.apache.org/dist/hadoop/core/hadoop-3.4.1/hadoop-3.4.1.tar.gz
 sudo tar xvfz hadoop-3.4.1.tar.gz -C /hadoop/
-curl -OL https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz
-sudo tar xvfz spark-3.5.3-bin-hadoop3.tgz -C /hadoop/
+curl -OL https://archive.apache.org/dist/spark/spark-3.5.6/spark-3.5.6-bin-hadoop3.tgz
+sudo tar xvfz spark-3.5.6-bin-hadoop3.tgz -C /hadoop/
 ~~~
 
 ~~~bash

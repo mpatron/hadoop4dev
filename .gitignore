@@ -24,3 +24,5 @@ derby.log
 .vagrant
 
 *.exclude
+
+.ansible

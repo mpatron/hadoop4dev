@@ -15,10 +15,9 @@
   tasks:
 
   ## Spark
-    # curl -OL https://dlcdn.apache.org/hadoop/common/{{ install_hadoop_file }}/{{ install_hadoop_file_zip }}
     - name: Download file Spark3 for Hadoop3
       ansible.builtin.get_url:
-        url: https://dlcdn.apache.org/spark/{{ install_spark_file }}/{{ install_spark_file_zip }}
+        url: "{{ install_spark_file_url }}"
         dest: "{{ install_hadoop_dir }}/{{ install_spark_file_zip }}"
         checksum: "{{ install_spark_file_hash }}"
         owner: "{{ hadoop_user }}"
@@ -31,7 +30,6 @@
         src: "{{ install_hadoop_dir }}/{{ install_spark_file_zip }}"
         dest: "{{ install_hadoop_dir }}/{{ install_spark_file_zip }}"
       delegate_to: "{{ hdfs_namenodes[0] }}"
-    # sudo tar xvfz {{ install_hadoop_file_zip }} -C {{ install_hadoop_dir }}/
     - name: Unarchive a file that is already on the remote machine
       ansible.builtin.unarchive:
         src: "{{ install_hadoop_dir }}/{{ install_spark_file_zip }}"
