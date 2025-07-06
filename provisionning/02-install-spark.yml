@@ -1,6 +1,6 @@
 ---
 # ansible-playbook -i inventories/jobjects 02-install-spark.yml
-- name: Playbook to configure with username/password
+- name: Playbook de spark
   hosts: hadoop
   become: true
 

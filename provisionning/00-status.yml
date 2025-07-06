@@ -1,10 +1,9 @@
 ---
-- name: Playbook to configure with username/password
+- name: Playbook de hadoop et spark
   hosts: hadoop
   become: true
   vars_files:
     - vars/main.yml
-
   tasks:
     - name: Printing Fact Variables
       ansible.builtin.debug:
@@ -23,9 +22,8 @@
       become: true
       when: inventory_hostname == hdfs_namenodes[0]
       with_items:
-        - hdfs
-        - yarn
-        - spark-history
+        - hadoop-dfs.service
+        - spark-history.service
     - name: Create command on HDFS CLuster
       ansible.builtin.command: "{{ item }}"
       args:
@@ -41,3 +39,19 @@
     - name: Display variable my_output
       ansible.builtin.debug:
         var: my_output
+# ansible-playbook -i inventories/jobjects 03-install-hive.yml
+- name: Playbook de hive
+  hosts: hiveservers
+  become: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: Start Hive Service (hive-hiveserver2 and hive-metastore)
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        daemon_reload: true
+        state: started
+      with_items:
+        - hive-hiveserver2.service
+        - hive-metastore.service

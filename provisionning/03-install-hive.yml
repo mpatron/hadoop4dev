@@ -1,6 +1,6 @@
 ---
 # ansible-playbook -i inventories/jobjects 03-install-hive.yml
-- name: Playbook to configure with username/password
+- name: Playbook de hive
   hosts: hiveservers
   become: true
 

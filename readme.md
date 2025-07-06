@@ -4,12 +4,16 @@
 
 ~~~bash
 mpatron@workstation:$ git clone https://github.com/mpatron/hadoop4dev.git
+# Création des machines (tester sur libvirt)
 mpatron@workstation:$ cd ~/hadoop4dev/infrastructure
 mpatron@workstation:~/hadoop4dev/infrastructure$ vagrant up
+# Installation provisionning
 mpatron@workstation:$ cd ~/hadoop4dev/provisionning
 mpatron@workstation:~/hadoop4dev/provisionning$ ansible-playbook -i inventories/jobjects 01-install-hadoop.yml
 mpatron@workstation:~/hadoop4dev/provisionning$ ansible-playbook -i inventories/jobjects 02-install-spark.yml
 mpatron@workstation:~/hadoop4dev/provisionning$ ansible-playbook -i inventories/jobjects 03-install-hive.yml
+# Vérification
+mpatron@workstation:~/hadoop4dev/provisionning$ ansible-playbook -i inventories/jobjects 00-status.yml
 mpatron@workstation:$ cd ~/hadoop4dev/infrastructure
 mpatron@workstation:~/hadoop4dev/infrastructure$ vagrant ssh node0 -- hdfs dfs -ls /
 ~~~
@@ -33,43 +37,44 @@ In /etc/hosts put this:
 
 ## Requirement
 
+Installation de ansible et de ansible-lint
+
 ~~~bash
-mpatron@workstation:~/hadoop4dev/provisionning$
-mpatron@workstation:~/hadoop4dev/provisionning$ ansible-galaxy collection install -r requirements.yml --ignore-certs
+mickael@deborah:~$ python3 -m venv ~/venv
+mickael@deborah:~$ source ~/venv/bin/activate
+(venv) mickael@deborah:~$ pip install --upgrade ansible ansible-lint passlib
+(venv) mickael@deborah:~$ pip list --outdated --format=json | jq -r '.[] | "\(.name)==\(.latest_version)"' | xargs -n1 pip install  --upgrade
+~~~
+
+Installation du projet hadoop4dev et de ses dependances
+
+~~~bash
+(venv) mickael@deborah:~$ cd
+(venv) mickael@deborah:~$ git clone https://github.com/mpatron/hadoop4dev.git
+(venv) mickael@deborah:~$ cd ~/hadoop4dev/provisionning
+(venv) mpatron@workstation:~/hadoop4dev/provisionning$
+(venv) mpatron@workstation:~/hadoop4dev/provisionning$ ansible-galaxy collection install -r requirements.yml --ignore-certs
 Process install dependency map
 Starting collection install process
 Installing 'freeipa.ansible_freeipa:1.13.1' to '/home/mpatron/.ansible/collections/ansible_collections/freeipa/ansible_freeipa'
 Installing 'community.general:9.0.1' to '/home/mpatron/.ansible/collections/ansible_collections/community/general'
 Installing 'community.crypto:2.20.0' to '/home/mpatron/.ansible/collections/ansible_collections/community/crypto'
 Installing 'ansible.posix:1.5.4' to '/home/mpatron/.ansible/collections/ansible_collections/ansible/posix'
-mpatron@workstation:~/hadoop4dev/provisionning$ ansible-galaxy role install -r requirements.yml  --ignore-certs
+(venv) mpatron@workstation:~/hadoop4dev/provisionning$ ansible-galaxy role install -r requirements.yml  --ignore-certs
 - downloading role 'swap', owned by geerlingguy
 - downloading role from https://github.com/geerlingguy/ansible-role-swap/archive/1.2.0.tar.gz
 - extracting geerlingguy.swap to /home/mpatron/.ansible/roles/geerlingguy.swap
 - geerlingguy.swap (1.2.0) was installed successfully
-# et aussi
-mpatron@workstation:~/hadoop4dev/provisionning$ sudo apt install python3-passlib
-[sudo] password for mpatron:
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-The following NEW packages will be installed:
-  python3-passlib
-0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
-Need to get 476 kB of archives.
-After this operation, 2091 kB of additional disk space will be used.
-Get:1 http://archive.ubuntu.com/ubuntu noble/main amd64 python3-passlib all 1.7.4-4 [476 kB]
-Fetched 476 kB in 11s (43.2 kB/s)
-Selecting previously unselected package python3-passlib.
-(Reading database ... 49276 files and directories currently installed.)
-Preparing to unpack .../python3-passlib_1.7.4-4_all.deb ...
-Unpacking python3-passlib (1.7.4-4) ...
-Setting up python3-passlib (1.7.4-4) ...
 ~~~
 
+🔐 Pour des raisons de sécurité, il est préférable de regénérer les clefs des comptes systems hadoop, hdfs, yarn et hive. Ceci n'est pas utile en envirronnement de developpement ou de test. C'est bien d'être parano 🤯 mais avec la tête froide 🤓.
+
 ~~~bash
-ssh-keygen -t ed25519 -C "hdfs@hadoop.jobjects.net" -f hdfs_hadoop
-ssh-keygen -t ed25519 -C "yarn@hadoop.jobjects.net" -f yarn_hadoop
+(venv) mickael@deborah:~$ cd ~/hadoop4dev/provisionning/roles/ansible_role_hadoop_adduser/files/etc
+(venv) mpatron@workstation:~/hadoop4dev/provisionning/roles/ansible_role_hadoop_adduser/files/etc$ ssh-keygen -t ed25519 -C "hadoop@hadoop.jobjects.net" -f hadoop_hadoop
+(venv) mpatron@workstation:~/hadoop4dev/provisionning/roles/ansible_role_hadoop_adduser/files/etc$ ssh-keygen -t ed25519 -C "hdfs@hadoop.jobjects.net" -f hdfs_hadoop
+(venv) mpatron@workstation:~/hadoop4dev/provisionning/roles/ansible_role_hadoop_adduser/files/etc$ ssh-keygen -t ed25519 -C "yarn@hadoop.jobjects.net" -f yarn_hadoop
+(venv) mpatron@workstation:~/hadoop4dev/provisionning/roles/ansible_role_hadoop_adduser/files/etc$ ssh-keygen -t ed25519 -C "hive@hadoop.jobjects.net" -f hive_hadoop
 ~~~
 
 ~~~bash

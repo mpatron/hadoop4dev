@@ -1,6 +1,6 @@
 ---
 # ansible-playbook -i inventories/jobjects 01-install-hadoop.yml
-- name: Playbook to configure with username/password
+- name: Playbook installation de hadoop
   hosts: hadoop
   become: true
 
