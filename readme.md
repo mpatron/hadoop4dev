@@ -71,10 +71,10 @@ Installing 'ansible.posix:1.5.4' to '/home/mpatron/.ansible/collections/ansible_
 
 ~~~bash
 (venv) mickael@deborah:~$ cd ~/hadoop4dev/provisionning/roles/ansible_role_hadoop_adduser/files/etc
-(venv) mpatron@workstation:~/hadoop4dev/provisionning/roles/ansible_role_hadoop_adduser/files/etc$ ssh-keygen -t ed25519 -C "hadoop@hadoop.jobjects.net" -f hadoop_hadoop
-(venv) mpatron@workstation:~/hadoop4dev/provisionning/roles/ansible_role_hadoop_adduser/files/etc$ ssh-keygen -t ed25519 -C "hdfs@hadoop.jobjects.net" -f hdfs_hadoop
-(venv) mpatron@workstation:~/hadoop4dev/provisionning/roles/ansible_role_hadoop_adduser/files/etc$ ssh-keygen -t ed25519 -C "yarn@hadoop.jobjects.net" -f yarn_hadoop
-(venv) mpatron@workstation:~/hadoop4dev/provisionning/roles/ansible_role_hadoop_adduser/files/etc$ ssh-keygen -t ed25519 -C "hive@hadoop.jobjects.net" -f hive_hadoop
+(venv) mpatron@workstation:~/.../etc$ ssh-keygen -t ed25519 -C "hadoop@hadoop.jobjects.net" -f hadoop_hadoop
+(venv) mpatron@workstation:~/.../etc$ ssh-keygen -t ed25519 -C "hdfs@hadoop.jobjects.net" -f hdfs_hadoop
+(venv) mpatron@workstation:~/.../etc$ ssh-keygen -t ed25519 -C "yarn@hadoop.jobjects.net" -f yarn_hadoop
+(venv) mpatron@workstation:~/.../etc$ ssh-keygen -t ed25519 -C "hive@hadoop.jobjects.net" -f hive_hadoop
 ~~~
 
 ~~~bash
