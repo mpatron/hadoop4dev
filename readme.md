@@ -64,12 +64,12 @@ In /etc/hosts put this:
 
 ~~~txt
 # Hadoop4Dev
-192.168.124.140	node0.jobjects.net	node0
-192.168.124.141	node1.jobjects.net	node1
-192.168.124.142	node2.jobjects.net	node2
-192.168.124.143	node3.jobjects.net	node3
-192.168.124.144	node4.jobjects.net	node4
-192.168.124.145	node5.jobjects.net	node5
+192.168.124.140  node0.jobjects.net  node0
+192.168.124.141  node1.jobjects.net  node1
+192.168.124.142  node2.jobjects.net  node2
+192.168.124.143  node3.jobjects.net  node3
+192.168.124.144  node4.jobjects.net  node4
+192.168.124.145  node5.jobjects.net  node5
 ~~~
 
 - HDFS:          [http://node0.jobjects.net:9870](http://node0.jobjects.net:9870)
@@ -77,7 +77,7 @@ In /etc/hosts put this:
 - SPARK_HISTORY: [http://node0.jobjects.net:18080](http://node0.jobjects.net:18080)
 - HIVE_SERVER:   [http://node1.jobjects.net:10002](http://node1.jobjects.net:10002)
 
-## Test de fonctionne 
+## Test de fonctionnent
 
 Apres une connection sur node0
 
@@ -100,4 +100,3 @@ sudo -u hadoop bash -lc 'hdfs dfs -rm -skipTrash -f -R output'
 sudo -u hadoop bash -lc 'yarn jar /hadoop/hadoop-3.4.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.4.1.jar wordcount "books/*" output'
 sudo -u hadoop bash -lc 'yarn application -list'
 ~~~
-
